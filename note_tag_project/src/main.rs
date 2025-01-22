@@ -13,7 +13,7 @@ async fn rocket() -> _ {
     
     let database_config = DBConfig::default();
     let db_connection = mysql_connec(&database_config).await.unwrap();
-    Migrator::up(&db_connection, None).await.unwrap();
+    Migrator::fresh(&db_connection).await.unwrap();
 
     rocket::build()
         .attach(CORS)

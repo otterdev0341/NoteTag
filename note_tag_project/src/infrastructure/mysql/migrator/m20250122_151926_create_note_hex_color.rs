@@ -1,5 +1,7 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
+
+
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -7,16 +9,17 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
-        todo!();
+        
 
         manager
             .create_table(
                 Table::create()
-                    .table(Post::Table)
+                    .table(NoteHexColor::Table)
                     .if_not_exists()
-                    .col(pk_auto(Post::Id))
-                    .col(string(Post::Title))
-                    .col(string(Post::Text))
+                    .col(pk_auto(NoteHexColor::Id).integer())
+                    .col(string(NoteHexColor::HexColor).not_null())
+                    .col(date_time(NoteHexColor::CreateAt).not_null().default(Expr::current_timestamp()))
+                    .col(date_time(NoteHexColor::UpdatedAt).not_null().default(Expr::current_timestamp()))
                     .to_owned(),
             )
             .await
@@ -24,18 +27,19 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
-        todo!();
+        
 
         manager
-            .drop_table(Table::drop().table(Post::Table).to_owned())
+            .drop_table(Table::drop().table(NoteHexColor::Table).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-enum Post {
+pub enum NoteHexColor {
     Table,
     Id,
-    Title,
-    Text,
+    HexColor,
+    CreateAt,
+    UpdatedAt
 }
