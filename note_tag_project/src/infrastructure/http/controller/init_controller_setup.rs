@@ -4,7 +4,7 @@ use crate::infrastructure::http::controller::auth;
 
 pub fn init_controller_setup() -> AdHoc {
     AdHoc::on_ignite("Initialize controller", |rocket| async {
-        rocket.mount("/", auth_routes())
+        rocket.mount("/auth", auth_routes())
     })
 }
 
