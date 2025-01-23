@@ -40,6 +40,8 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Gender,
+    #[sea_orm(has_many = "super::note::Entity")]
+    Note,
     #[sea_orm(
         belongs_to = "super::role::Entity",
         from = "Column::RoleId",
@@ -61,6 +63,12 @@ impl Related<super::account_status::Entity> for Entity {
 impl Related<super::gender::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Gender.def()
+    }
+}
+
+impl Related<super::note::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Note.def()
     }
 }
 

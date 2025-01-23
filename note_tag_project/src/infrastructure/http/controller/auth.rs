@@ -1,14 +1,10 @@
 use rocket::{get, http::Status, post, serde::json::Json};
-use utoipa::OpenApi;
-
 use crate::{domain::dto::auth_dto::{ReqSignInDto, ResSignInDto}, infrastructure::http::response_type::response_type::{Response, SuccessResponse}};
 
 
-#[derive(OpenApi)]
-#[openapi(paths(crate::infrastructure::http::controller::auth::sign_in),components(schemas(ReqSignInDto, ResSignInDto)))]
-pub struct ApiDoc();
 
 
+// Route 1
 
 #[utoipa::path(
     post,
@@ -26,11 +22,18 @@ pub async fn sign_in(
     todo!()
 }
 
+
+
+// Route 2
 #[post("/sign-up")]
 pub async fn sign_up() -> &'static str {
-    "This is sign up page"
+    todo!()
 }
 
+
+
+
+// Route 3
 #[get("/me")]
 pub async fn me() -> Response<String> {
     Ok(SuccessResponse((Status::Ok, "This is me".to_string())))

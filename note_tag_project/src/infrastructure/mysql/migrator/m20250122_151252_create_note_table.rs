@@ -1,6 +1,6 @@
 use sea_orm_migration::{prelude::*, schema::*};
 
-use super::{m20250122_151926_create_note_hex_color::NoteHexColor, m20250122_152447_create_note_status::NoteStatus};
+use super::{m20220101_000001_create_user_table::User, m20250122_151926_create_note_hex_color::NoteHexColor, m20250122_152447_create_note_status::NoteStatus};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -19,6 +19,14 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Note::Id).integer())
                     .col(string_len(Note::Title,255).not_null())
                     .col(string(Note::Detail).not_null())
+                    .col(integer(Note::UserId).not_null())
+                        .foreign_key(ForeignKey::create()
+                        .name("fk_note_user")
+                        .from(Note::Table, Note::UserId)
+                        .to(User::Table, User::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                        .on_update(ForeignKeyAction::Cascade)
+                    )
                     // fk
                     .col(integer(Note::Color).not_null())
                         .foreign_key(ForeignKey::create()
@@ -60,6 +68,7 @@ pub enum Note {
     Id,
     Title,
     Detail,
+    UserId,
     Color,
     Status,
     CreateAt,

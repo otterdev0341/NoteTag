@@ -1,5 +1,6 @@
-use note_tag_project::{configuration::db_config::DBConfig, infrastructure::{faring::cors::CORS, http::controller::{auth::ApiDoc, init_controller_setup::init_controller_setup}, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
+use note_tag_project::{configuration::{api_doc_config::ApiDoc, db_config::DBConfig}, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
 use sea_orm_migration::MigratorTrait;
+
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 

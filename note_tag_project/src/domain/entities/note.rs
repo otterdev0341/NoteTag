@@ -9,6 +9,7 @@ pub struct Model {
     pub id: i32,
     pub title: String,
     pub detail: String,
+    pub user_id: i32,
     pub color: i32,
     pub status: i32,
     pub create_at: DateTime,
@@ -35,6 +36,14 @@ pub enum Relation {
     NoteStatus,
     #[sea_orm(has_many = "super::note_tag::Entity")]
     NoteTag,
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::UserId",
+        to = "super::user::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    User,
 }
 
 impl Related<super::note_hex_color::Entity> for Entity {
@@ -52,6 +61,12 @@ impl Related<super::note_status::Entity> for Entity {
 impl Related<super::note_tag::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::NoteTag.def()
+    }
+}
+
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::User.def()
     }
 }
 
