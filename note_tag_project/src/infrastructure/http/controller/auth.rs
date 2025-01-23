@@ -1,5 +1,5 @@
 use rocket::{get, http::Status, post, serde::json::Json};
-use crate::{domain::dto::auth_dto::{ReqSignInDto, ResSignInDto}, infrastructure::http::response_type::response_type::{Response, SuccessResponse}};
+use crate::{domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::http::response_type::response_type::{Response, SuccessResponse}};
 
 
 
@@ -25,8 +25,8 @@ pub async fn sign_in(
 
 
 // Route 2
-#[post("/sign-up")]
-pub async fn sign_up() -> &'static str {
+#[post("/sign-up", data = "<req_sign_up>")]
+pub async fn sign_up(req_sign_up: Json<ReqSignUpDto>) -> &'static str {
     todo!()
 }
 
