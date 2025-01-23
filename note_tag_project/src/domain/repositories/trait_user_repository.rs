@@ -10,6 +10,4 @@ pub trait UserRepository {
     async fn get_all_user(&self)-> Result<Vec<user::Entity>, DbErr>;
     async fn update_user_by_id(&self, user_id: i32, user_info: ReqSignUpDto) -> Result<(), DbErr>;
     async fn delete_user_by_id(&self, user_id: i32) -> Result<(), DbErr>; 
-
-    
 }
