@@ -3,3 +3,8 @@ sea migrate generate -d <path of migration dir> <migrate name>
 
 #to generate entity
 sea generate entity -o <output dir> -u <database url>
+
+#use
+sea generate entity \
+    -u mysql://db_admin:password@192.168.1.60:3306/note_tag_db \
+    -o note_tag_project/src/domain/entities

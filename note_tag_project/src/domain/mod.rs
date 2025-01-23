@@ -1,3 +1,3 @@
 pub mod dto;
-pub mod schema;
+pub mod entities;
 pub mod repositories;
