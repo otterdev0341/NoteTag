@@ -8,3 +8,7 @@ sea generate entity -o <output dir> -u <database url>
 sea generate entity \
     -u mysql://db_admin:password@192.168.1.60:3306/note_tag_db \
     -o note_tag_project/src/domain/entities
+
+
+open api spec :
+http://localhost:8000/openapi.json

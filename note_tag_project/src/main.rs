@@ -1,13 +1,15 @@
-use note_tag_project::{configuration::db_config::DBConfig, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
+use note_tag_project::{configuration::db_config::DBConfig, infrastructure::{faring::cors::CORS, http::controller::{auth::ApiDoc, init_controller_setup::init_controller_setup}, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
 use sea_orm_migration::MigratorTrait;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 
-#[macro_use] extern crate rocket;
 
 
 
-#[launch]
-async fn rocket() -> _ {
+
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error>  {
     
     dotenv::dotenv().ok();
     
@@ -18,7 +20,16 @@ async fn rocket() -> _ {
     rocket::build()
         .attach(CORS)
         .attach(init_controller_setup())
+        .mount(
+            "/",
+            SwaggerUi::new("/swagger-ui/<_..>")
+                .url("/api-docs/openapi.json", ApiDoc::openapi()),
+        )
+        .launch()
+        .await?;
         
         
-        
+    Ok(())
 }
+
+
