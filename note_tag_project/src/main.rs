@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 
-use note_tag_project::{application::usecase::{ init_usecase_setup::init_usecase_setup, user_usecase::UserUseCase}, configuration::{api_doc_config::ApiDoc, db_config::DBConfig}, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec, repositories::impl_user_repository::ImplUserRepository}}};
+use note_tag_project::{application::usecase::init_usecase_setup::init_usecase_setup, configuration::{api_doc_config::ApiDoc, db_config::DBConfig}, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
 use sea_orm_migration::MigratorTrait;
 use tracing_subscriber;
 
@@ -35,9 +35,6 @@ async fn main() -> Result<(), rocket::Error>  {
     //     .merge(("port", 8000));
 
     let db_arc = Arc::new(db_connection);
-
-    
-
 
     rocket::build()
         .attach(CORS)

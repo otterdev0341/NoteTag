@@ -4,7 +4,7 @@ use validator::Validate;
 
 
 
-#[derive(Deserialize, ToSchema, Validate)]
+#[derive(Deserialize, ToSchema, Validate, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ReqSignInDto{
 
@@ -14,9 +14,10 @@ pub struct ReqSignInDto{
     #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
     pub password: String
 }
-#[derive(Serialize, Deserialize, Responder, ToSchema)]
+#[derive(Serialize, Deserialize, Responder, ToSchema, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ResSignInDto{
+    
     pub token: String
 }
 
@@ -44,4 +45,12 @@ pub struct ReqSignUpDto{
 
     #[validate(length(min = 1, message = "The Gender must not be empty"))]
     pub gender: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Claims {
+    pub sub: i32,
+    pub role: String,
+    pub exp: u64,
 }

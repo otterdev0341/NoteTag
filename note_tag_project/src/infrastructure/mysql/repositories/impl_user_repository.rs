@@ -136,8 +136,24 @@ impl UserHelperRepository for ImplUserRepository {
         }
     }
     
-    async fn is_user_data_valid(&self, user_info: &ReqSignInDto) -> Option<user::Entity> {
-        todo!()
+    async fn is_user_data_valid(&self, user_info: ReqSignInDto) -> Option<user::Model> {
+        let result = user::Entity::find()
+            .filter(user::Column::Email.eq(user_info.email))
+            .one(&*self.db)
+            .await;
+        
+        match result {
+            Ok(user) => {
+                if user.is_some() {
+                    return user;
+                }else {
+                    return None;
+                }
+            },
+            Err(_) => {
+                return None;
+            }
+        }
     }
 
 }

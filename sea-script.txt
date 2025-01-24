@@ -12,3 +12,15 @@ sea generate entity \
 
 open api spec :
 http://localhost:8000/openapi.json
+
+
+#sql command to use when migrator table
+# if not use thoose command user can't be create bec fk relation
+insert into gender (id, detail) values (0,'male');
+insert into gender (id, detail) values (0, 'female');
+
+insert into role (id, role_name) values (0, 'user');
+insert into role (id, role_name) values (0, 'admin');
+
+insert into account_status (id, status_detail) values (0, 'active');
+insert into account_status (id, status_detail) values (0, 'inactive');

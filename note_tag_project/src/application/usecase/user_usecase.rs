@@ -1,11 +1,13 @@
 
-use std::sync::Arc;
+use std::{sync::Arc, time::SystemTime};
 
-use rocket::serde::json::Json;
+use bcrypt::verify;
+use jsonwebtoken::{encode, EncodingKey, Header};
+use rocket::{http::Status, serde::json::Json};
 use sea_orm::DbErr;
 use sea_orm_migration::async_trait;
 
-use crate::{ domain::{dto::auth_dto::ReqSignUpDto, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::mysql::repositories::impl_user_repository::ImplUserRepository};
+use crate::{ configuration::jwt_config::{self, JwtSecret}, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::{http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
 
 pub struct UserUseCase<T>
 where 
@@ -52,8 +54,43 @@ where
         }
         
     }
-    pub fn sign_in(&self) {
-        todo!()
+    pub async fn sign_in(&self, user_data: ReqSignInDto) -> Result<ResSignInDto, ErrorResponse>{
+        // check if user exists
+        let user = self.user_repository.is_user_data_valid(user_data.clone()).await;
+        let u = match user {
+            Some(u) => u,
+            None => return Err(ErrorResponse((Status::BadRequest, "Invalid username or password".to_string())))
+        };
+        // verify password
+        if !verify(&user_data.password, &u.password).unwrap() {
+            return Err(ErrorResponse((Status::Unauthorized, "Invalid username or password".to_string())))
+        }
+        // generate token
+        let claims = Claims {
+            sub: u.id,
+            role: u.role_id.to_string(),
+            exp: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            + 4 * 60 * 60,
+        };
+
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(JwtSecret::default().jwt_secret.as_bytes())
+        ).map_err(|e| ErrorResponse((
+            Status::InternalServerError,
+            format!("Token generation error: {}", e)
+        )))?;
+        
+    
+        Ok(ResSignInDto { token })
+        
+            
+        // generate token
+    
     }
 
     pub fn delete_account(&self) {
