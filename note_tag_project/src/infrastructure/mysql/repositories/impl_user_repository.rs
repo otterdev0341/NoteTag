@@ -3,9 +3,12 @@
 use std::sync::Arc;
 
 use bcrypt::{hash, DEFAULT_COST};
+
 use rocket::serde::json::Json;
 use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set};
 use sea_orm_migration::async_trait;
+use sqlx::types::chrono::Utc;
+use tracing::info;
 
 
 use crate::domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, entities::{gender, user}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}};
@@ -28,22 +31,39 @@ impl UserRepository for ImplUserRepository {
     
     async fn create_user(&self, user_info: ReqSignUpDto) -> Result<(), DbErr> {
         
-        let gender_id = self.get_id_by_gender(&user_info.gender).await?;
+        // let gender_id = self.get_id_by_gender(&user_info.gender).await?;
         let hash_password = hash(user_info.password, DEFAULT_COST).unwrap();
-
+        // Log the values before executing the query
+        
+        
+        
         let new_user = user::ActiveModel {
-            email: Set(user_info.email),
-            username: Set(user_info.username),
-            password: Set(hash_password),
-            first_name: Set(user_info.first_name),
-            last_name: Set(user_info.last_name),
-            middle_name: Set(user_info.middle_name),
-            gender: Set(gender_id),
-            role_id: Set(0),
-            status: Set(0),
+            
+            username: Set(user_info.username.to_owned()),
+            password: Set(hash_password.to_owned()),
+            email: Set(user_info.email.to_owned()),
+            first_name: Set(user_info.first_name.to_owned()),
+            middle_name: Set(user_info.middle_name.to_owned()),
+            last_name: Set(user_info.last_name.to_owned()),
+            gender: Set(1 as i32),
+            status: Set(1 as i32),
+            role_id: Set(1 as i32),
+            // create_at: Set(Some(Utc::now())),  // Set create_at with the current timestamp
+            // updated_at: Set(Some(Utc::now())), // Set updated_at with the current timestamp
             ..Default::default()
         };
-        user::Entity::insert(new_user).exec(&*self.db).await.map(|_| ())
+        let result = user::Entity::insert(new_user).exec(&*self.db).await.map(|_| ());
+        match result {
+            Ok(_) => {
+                info!("User created successfully");
+                Ok(())
+            },
+            Err(err) => {
+                info!("Error creating user: {:?}", err);
+                Err(err)
+            }
+            
+        }
     }
 
     async fn get_user_by_id(&self, user_id: i32) -> Result<Option<user::Entity>, DbErr> {

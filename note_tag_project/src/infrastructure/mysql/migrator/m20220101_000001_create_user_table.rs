@@ -17,9 +17,9 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(User::Table)
                     .if_not_exists()
-                    .col(pk_auto(User::Id).unique_key().integer())
+                    .col(pk_auto(User::Id).integer())
                     .col(string_len(User::Username,50).not_null().unique_key())
-                    .col(string_len(User::Password,160).not_null())
+                    .col(string_len(User::Password,80).not_null())
                     .col(string(User::Email).not_null().unique_key())
                     .col(string_len(User::FirstName,80).not_null())
                     .col(string_len(User::MiddleName,80).not_null())
@@ -50,8 +50,16 @@ impl MigrationTrait for Migration {
                         .to(Role::Table, Role::Id)
                         .on_delete(ForeignKeyAction::Cascade)
                         .on_update(ForeignKeyAction::Cascade))
-                    .col(date_time(User::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(User::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(User::CreateAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(User::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned()
             )
             .await

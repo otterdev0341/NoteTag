@@ -1,5 +1,6 @@
 use sea_orm::{ConnectOptions, Database, DatabaseConnection, DbErr};
 
+
 use crate::configuration::db_config::DBConfig;
 
 pub async fn mysql_connec(config: &DBConfig) -> Result<DatabaseConnection, DbErr> {
@@ -10,7 +11,10 @@ pub async fn mysql_connec(config: &DBConfig) -> Result<DatabaseConnection, DbErr
 
     opts
         .max_connections(50)
-        .sqlx_logging(false);
+        // .sqlx_logging(true)
+        // .sqlx_logging_level(log::LevelFilter::Debug)
+        ;
+        
 
     Database::connect(opts).await
 }

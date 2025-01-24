@@ -1878,6 +1878,9 @@ dependencies = [
  "sea-orm",
  "sea-orm-migration",
  "serde",
+ "sqlx",
+ "tracing",
+ "tracing-subscriber",
  "utoipa",
  "utoipa-swagger-ui",
  "validator",
@@ -3133,6 +3136,8 @@ dependencies = [
  "smallvec",
  "thiserror 2.0.11",
  "time",
+ "tokio",
+ "tokio-stream",
  "tracing",
  "url",
  "uuid",
@@ -3174,6 +3179,7 @@ dependencies = [
  "sqlx-sqlite",
  "syn 2.0.96",
  "tempfile",
+ "tokio",
  "url",
 ]
 
