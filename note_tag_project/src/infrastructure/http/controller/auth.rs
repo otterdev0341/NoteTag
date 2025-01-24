@@ -1,5 +1,8 @@
-use rocket::{get, http::Status, post, serde::json::Json};
-use crate::{domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::http::response_type::response_type::{Response, SuccessResponse}};
+use std::{result, sync::Arc};
+
+use rocket::{get, http::Status, post, serde::json::Json, State};
+use validator::Validate;
+use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::{http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
 
 
 
@@ -16,9 +19,11 @@ use crate::{domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, i
 )]
 #[post("/sign-in", data = "<req_sign_in>")]
 pub async fn sign_in(
-    req_sign_in: Json<ReqSignInDto>
+    req_sign_in: Json<ReqSignInDto>,
+    
 ) 
--> Response<Json<ResSignInDto>>{
+-> Response<Json<ResSignInDto>>
+{
     todo!()
 }
 
@@ -26,8 +31,33 @@ pub async fn sign_in(
 
 // Route 2
 #[post("/sign-up", data = "<req_sign_up>")]
-pub async fn sign_up(req_sign_up: Json<ReqSignUpDto>) -> &'static str {
-    todo!()
+pub async fn sign_up(
+    req_sign_up: Json<ReqSignUpDto>,
+    user_use_case: &State<Arc<UserUseCase<ImplUserRepository>>>,
+) 
+-> Response<String>
+{
+    // field empty Bad request
+    if let Err(errors) = req_sign_up.validate() {
+        return Err(
+            ErrorResponse((Status::BadRequest, format!("Validation errors: {:?}", errors)))
+        );
+    }
+
+    let result = user_use_case.sign_up(req_sign_up.into_inner()).await;
+    match result {
+        UserOperation::Success => {
+            Ok(SuccessResponse((Status::Created, "Account created!".to_string())))
+        },
+        UserOperation::Failed => {
+            Err(ErrorResponse((Status::BadRequest, "Username or email already exists".to_string())))
+        },
+        UserOperation::DatabaseError => {
+            Err(ErrorResponse((Status::InternalServerError, "Database error".to_string())))
+        }
+    }
+    
+    
 }
 
 

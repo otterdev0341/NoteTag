@@ -15,6 +15,7 @@ dotenv = "0.14.1"
 
 utoipa = "5.3.1"
 utoipa-swagger-ui = {version="*", features=["rocket"]}
-
 serde = { version = "1.0.217", features = ["derive"] }
 jsonwebtoken = "9.3.0"
+bcrypt = "0.16.0"
+validator = {version = "0.20.0", features = ["derive"]}

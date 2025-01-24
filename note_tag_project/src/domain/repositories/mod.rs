@@ -8,3 +8,4 @@ pub mod trait_note_repository;
 pub mod trait_user_repository;
 pub mod trait_user_x_tag_repository;
 pub mod trait_note_x_tag_repository;
+pub mod trait_user_helper_repository;
