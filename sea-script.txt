@@ -24,3 +24,13 @@ insert into role (id, role_name) values (0, 'admin');
 
 insert into account_status (id, status_detail) values (0, 'active');
 insert into account_status (id, status_detail) values (0, 'inactive');
+
+INSERT INTO note_hex_color (hex_color) VALUES
+('#DFFF00'),
+('#FFBF00'),
+('#FF7F50'),
+('#DE3163'),
+('#9FE2BF'),
+('#40E0D0'),
+('#6495ED'),
+('#CCCCFF');

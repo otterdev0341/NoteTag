@@ -18,8 +18,10 @@ async fn main() -> Result<(), rocket::Error>  {
     
     dotenv::dotenv().ok();
     
-    // Set up tracing subscriber for logging
-    tracing_subscriber::fmt::init();
+    // Initialize tracing subscriber
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
     let database_config = DBConfig::default();
     let db_connection = mysql_connec(&database_config).await.unwrap();
