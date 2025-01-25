@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 
-use note_tag_project::{application::usecase::init_usecase_setup::init_usecase_setup, configuration::{api_doc_config::ApiDoc, db_config::DBConfig}, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
+use note_tag_project::{application::usecase::init_usecase_setup::init_usecase_setup, configuration::{api_doc_config::ApiDoc, db_config::DBConfig, jwt_config}, infrastructure::{faring::cors::CORS, http::controller::init_controller_setup::init_controller_setup, mysql::{migrator::Migrator, mysql_connect::mysql_connec}}};
 use sea_orm_migration::MigratorTrait;
 use tracing_subscriber;
 
@@ -41,6 +41,7 @@ async fn main() -> Result<(), rocket::Error>  {
         // .manage(init_usecase_setup(db_connection.clone())) // Attach use case setup
         .attach(init_usecase_setup(Arc::clone(&db_arc)))
         .attach(init_controller_setup())
+        .manage(jwt_config::JwtSecret::default())
         .mount(
             "/",
             SwaggerUi::new("/swagger-ui/<_..>")

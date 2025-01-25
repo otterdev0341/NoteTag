@@ -32,6 +32,7 @@ where
             user_repository: user_repository
         }
     }
+    
     pub async fn sign_up(&self, user_data: ReqSignUpDto) -> UserOperation {
         // check is username and email unique
         let username_unique = self.user_repository.is_username_unique(&user_data.username).await;
@@ -76,8 +77,13 @@ where
             + 4 * 60 * 60,
         };
 
+        let header = Header {
+            alg: jsonwebtoken::Algorithm::HS512,
+            ..Default::default()
+        };
+
         let token = encode(
-            &Header::default(),
+            &header,
             &claims,
             &EncodingKey::from_secret(JwtSecret::default().jwt_secret.as_bytes())
         ).map_err(|e| ErrorResponse((

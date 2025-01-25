@@ -2,7 +2,7 @@ use std::{result, sync::Arc};
 
 use rocket::{get, http::Status, post, serde::json::Json, State};
 use validator::Validate;
-use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, entities::user}, infrastructure::{http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
+use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
 
 
 
@@ -86,7 +86,10 @@ pub async fn sign_up(
 
 // Route 3
 #[get("/me")]
-pub async fn me() -> Response<String> {
-    Ok(SuccessResponse((Status::Ok, "This is me".to_string())))
+pub async fn me(user: AuthenticatedUser) -> Response<String> {
+    Ok(SuccessResponse((
+        Status::Ok,
+        "My user ID is: ".to_string() + user.id.to_string().as_str(),
+    )))
 }
 

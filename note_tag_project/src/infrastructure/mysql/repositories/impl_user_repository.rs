@@ -83,6 +83,8 @@ impl UserRepository for ImplUserRepository {
     }
 }
 
+
+#[async_trait::async_trait]
 impl UserHelperRepository for ImplUserRepository {
     async fn is_email_unique(&self, email: &str) -> bool {
         let result = user::Entity::find()
