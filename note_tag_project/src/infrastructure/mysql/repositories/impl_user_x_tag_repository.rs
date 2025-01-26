@@ -83,57 +83,93 @@ impl UserTagRepository for ImplUserTagRepository {
 
 
     async fn update_user_tag(&self, user_id: i32, old_tag: &str, new_tag: &str) -> Result<(), DbErr> {
+        let the_old_tag = String::from(old_tag);
+        let the_new_tag = String::from(new_tag);
+    
         // Begin the transaction
         let txn = self.db.begin().await?;
     
-        // Step 1: Validate the user exists
-        if user::Entity::find_by_id(user_id).one(&txn).await?.is_none() {
-            return Err(DbErr::Custom(format!("The user with ID {} does not exist", user_id)));
-        }
-    
-        // Step 2: Find the old tag ID
-        let old_tag_id = tag::Entity::find()
-            .filter(tag::Column::TagName.eq(old_tag))
+        // Step 1: Validate the user exists and retrieve the user id.
+        let valid_user = user::Entity::find()
+            .filter(user::Column::Id.eq(user_id))
             .one(&txn)
-            .await?
-            .ok_or_else(|| DbErr::Custom(format!("The tag '{}' does not exist", old_tag)))?
-            .id;
-    
-        // Step 3: Check if the user-tag association exists
-        let user_tag = user_tag::Entity::find()
-            .filter(user_tag::Column::UserId.eq(user_id))
-            .filter(user_tag::Column::TagId.eq(old_tag_id))
-            .one(&txn)
-            .await?
-            .ok_or_else(|| DbErr::Custom("UserTag record not found".to_string()))?;
-    
-        // Step 4: Find or create the new tag
-        let new_tag_id = match tag::Entity::find()
-            .filter(tag::Column::TagName.eq(new_tag))
-            .one(&txn)
-            .await?
-        {
-            Some(tag) => tag.id,
+            .await?;
+        let the_user_id = match valid_user {
+            Some(user) => user.id,
             None => {
-                let new_tag = tag::ActiveModel {
-                    tag_name: Set(new_tag.to_string()),
-                    create_at: Set(Some(Utc::now())),
-                    updated_at: Set(Some(Utc::now())),
-                    ..Default::default()
-                };
-                new_tag.insert(&txn).await?.id
+                error!("User with id {} not found", user_id);
+                txn.rollback().await?;  // Rollback transaction
+                return Err(DbErr::Custom(format!("User with id {} not found", user_id)));
             }
         };
     
-        // Step 5: Update the user-tag association
-        let mut user_tag_active: user_tag::ActiveModel = user_tag.into();
-        user_tag_active.tag_id = Set(new_tag_id);
-        user_tag_active.update(&txn).await?;
+        // Step 2: Check if the old tag exists in the database
+        let old_tag = tag::Entity::find()
+            .filter(tag::Column::TagName.eq(&the_old_tag))
+            .one(&txn)
+            .await?;
+        let the_old_tag_id = match old_tag {
+            Some(tag) => tag.id,
+            None => {
+                error!("Tag with name {} not found", the_old_tag);
+                txn.rollback().await?;  // Rollback transaction
+                return Err(DbErr::Custom(format!("Can't find tag id for tag {}", the_old_tag)));
+            }
+        };
     
+        // Step 3: Check if the user-tag association exists
+        let user_tag_association: Option<user_tag::Model> = user_tag::Entity::find()
+            .filter(user_tag::Column::UserId.eq(the_user_id))
+            .filter(user_tag::Column::TagId.eq(the_old_tag_id))
+            .one(&txn)
+            .await?;
+        let result_find = match user_tag_association {
+            Some(user_tag) => user_tag,
+            None => {
+                error!("User with id {} and tag with id {} not found", the_user_id, the_old_tag_id);
+                txn.rollback().await?;  // Rollback transaction
+                return Err(DbErr::Custom(format!("User with id {} and tag with id {} not found in association table", the_user_id, the_old_tag_id)));
+            }
+        };
+    
+        // Step 4: Find or create the new tag
+        let the_new_tag_id = match tag::Entity::find()
+            .filter(tag::Column::TagName.eq(&the_new_tag))
+            .one(&txn)
+            .await? {
+                Some(tag) => tag.id,
+                None => {
+                    let new_tag = tag::ActiveModel {
+                        tag_name: Set(the_new_tag),
+                        ..Default::default()
+                    };
+                    let inserted_tag = new_tag.insert(&txn).await?;
+                    inserted_tag.id
+                }
+            };
+    
+        // Step 5: Update the drop the association and create a new one
+        let delete_result = result_find.delete(&txn).await;
+        let new_record = user_tag::ActiveModel {
+            user_id: Set(the_user_id),
+            tag_id: Set(the_new_tag_id),
+            ..Default::default()
+        };
+        new_record.insert(&txn).await?;
         // Commit the transaction
-        txn.commit().await?;
-        Ok(())
+        let commit_result = txn.commit().await;
+        match commit_result {
+            Ok(_) => {
+                info!("Transaction committed successfully");
+                Ok(())
+            }
+            Err(e) => {
+                error!("Error committing transaction: {}", e);
+                Err(DbErr::Custom(format!("Error committing transaction: {}", e)))
+            }
+        }
     }
+    
     
 
     async fn delete_tag_from_user(&self, user_id: i32, tag_name: &str) -> Result<(), DbErr> {

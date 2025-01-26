@@ -12,8 +12,8 @@ pub struct Model {
     pub user_id: i32,
     pub color: i32,
     pub status: i32,
-    pub create_at: DateTime,
-    pub updated_at: DateTime,
+    pub created_at: Option<DateTimeUtc>,
+    pub updated_at: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

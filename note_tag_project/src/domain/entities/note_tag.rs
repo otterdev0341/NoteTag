@@ -9,7 +9,8 @@ pub struct Model {
     pub note_id: i32,
     #[sea_orm(primary_key, auto_increment = false)]
     pub tag_id: i32,
-    pub create_at: DateTime,
+    pub created_at: Option<DateTimeUtc>,
+    pub updated_at: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

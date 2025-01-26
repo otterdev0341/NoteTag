@@ -18,7 +18,7 @@ pub struct Model {
     pub gender: i32,
     pub status: i32,
     pub role_id: i32,
-    pub create_at: Option<DateTimeUtc>,
+    pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
 }
 

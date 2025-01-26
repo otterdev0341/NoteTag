@@ -6,6 +6,7 @@ use bcrypt::{hash, DEFAULT_COST};
 
 use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set};
 use sea_orm_migration::async_trait;
+use sqlx::types::chrono::Utc;
 use tracing::info;
 
 
@@ -46,7 +47,7 @@ impl UserRepository for ImplUserRepository {
             gender: Set(1 as i32),
             status: Set(1 as i32),
             role_id: Set(1 as i32),
-            // create_at: Set(Some(Utc::now())),  // Set create_at with the current timestamp
+            // created_at: Set(Some(Utc::now())),  // Set create_at with the current timestamp
             // updated_at: Set(Some(Utc::now())), // Set updated_at with the current timestamp
             ..Default::default()
         };
