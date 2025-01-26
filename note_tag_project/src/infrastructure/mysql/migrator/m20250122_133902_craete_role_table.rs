@@ -18,8 +18,16 @@ impl MigrationTrait for Migration {
                         .if_not_exists()
                     .col(pk_auto(Role::Id).integer())
                     .col(string(Role::RoleName).not_null().unique_key())
-                    .col(date_time(Role::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(Role::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(Role::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(Role::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -40,7 +48,7 @@ pub enum Role {
     Table,
     Id,
     RoleName,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
     
 }

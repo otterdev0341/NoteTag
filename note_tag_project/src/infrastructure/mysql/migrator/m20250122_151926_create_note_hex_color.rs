@@ -18,8 +18,16 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(NoteHexColor::Id).integer())
                     .col(string(NoteHexColor::HexColor).not_null())
-                    .col(date_time(NoteHexColor::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(NoteHexColor::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(NoteHexColor::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(NoteHexColor::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -40,6 +48,6 @@ pub enum NoteHexColor {
     Table,
     Id,
     HexColor,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }

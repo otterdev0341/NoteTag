@@ -1,14 +1,17 @@
 use std::sync::Arc;
 
-use rocket::{get, http::Status, post, routes, serde::json::Json, Route, State};
+use rocket::{get, http::Status, post, put, routes, serde::json::Json, Route, State};
+use sea_orm::Update;
+use validator::Validate;
 
-use crate::{application::usecase::user_tag_usecase::UserTagUseCase, domain::dto::user_tag_dto::{UserTagDto, UserTagListDto}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_x_tag_repository::ImplUserTagRepository}};
+use crate::{application::usecase::user_tag_usecase::UserTagUseCase, domain::{dto::user_tag_dto::{UpdateUserTagDto, UserTagDto, UserTagListDto}, entities::user_tag}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_x_tag_repository::ImplUserTagRepository}};
 
 
 pub fn user_tag_routes() -> Vec<Route> {
     routes![
         add_user_tag,
-        get_user_tag
+        get_user_tag,
+        update_user_tag
     ]
 }
 
@@ -45,4 +48,22 @@ pub async fn get_user_tag(
         Err(_) => Err(ErrorResponse((Status::BadRequest, "Error getting user tags".to_string())))
     }
     
+}
+
+#[put("/", data="<user_tag>")]
+pub async fn update_user_tag(
+    user: AuthenticatedUser,
+    user_tag_usecase: &State<Arc<UserTagUseCase<ImplUserTagRepository>>>,
+    user_tag: Json<UpdateUserTagDto>
+) -> Response<String> {
+
+    if user_tag.validate().is_err() {
+        return Err(ErrorResponse((Status::BadRequest, "Invalid tag name".to_string())));
+    }
+
+    let result = user_tag_usecase.update_user_tag(user.id, &user_tag.oldTagName, &user_tag.newTagName).await;
+    match result {
+        Ok(_) => Ok(SuccessResponse((Status::Ok, "User tag updated successfully".to_string()))),
+        Err(err) => Err(ErrorResponse((Status::BadRequest, format!("Error updating user tag: {}", err))))
+    }
 }

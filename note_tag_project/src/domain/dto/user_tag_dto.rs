@@ -18,3 +18,13 @@ pub struct UserTagListDto {
     pub totalTag: usize,
     pub tagList: Vec<String>
 }
+
+#[allow(non_snake_case)]
+#[derive(Deserialize, Serialize, ToSchema, Validate, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct UpdateUserTagDto {
+    #[validate(length(min = 1, message = "Tag must be at least 1 characters"))]
+    pub oldTagName: String,
+    #[validate(length(min = 1, message = "Tag must be at least 1 characters"))]
+    pub newTagName: String
+}

@@ -18,7 +18,16 @@ impl MigrationTrait for Migration {
                         .if_not_exists()
                     .col(integer(UserTag::UserId).not_null())
                     .col(integer(UserTag::TagId).not_null())
-                    .col(date_time(UserTag::CreateAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(UserTag::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(UserTag::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_user_tag_user")
@@ -56,5 +65,6 @@ enum UserTag {
     Table,
     UserId,
     TagId,
-    CreateAt,
+    CreatedAt,
+    UpdatedAt
 }

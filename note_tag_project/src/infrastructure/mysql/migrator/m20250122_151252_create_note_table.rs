@@ -45,8 +45,16 @@ impl MigrationTrait for Migration {
                         .on_delete(ForeignKeyAction::Cascade)
                         .on_update(ForeignKeyAction::Cascade)
                     )
-                    .col(date_time(Note::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(Note::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(Note::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(Note::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -71,6 +79,6 @@ pub enum Note {
     UserId,
     Color,
     Status,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }

@@ -16,8 +16,16 @@ impl MigrationTrait for Migration {
                         .if_not_exists()
                     .col(pk_auto(Tag::Id).integer())
                     .col(string(Tag::TagName).not_null().unique_key())
-                    .col(date_time(Tag::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(Tag::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(Tag::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(Tag::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -38,6 +46,6 @@ pub enum Tag {
     Table,
     Id,
     TagName,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }

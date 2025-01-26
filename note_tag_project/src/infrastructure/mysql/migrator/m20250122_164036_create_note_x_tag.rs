@@ -21,7 +21,16 @@ impl MigrationTrait for Migration {
                         .if_not_exists()
                     .col(integer(NoteTag::NoteId).not_null())
                     .col(integer(NoteTag::TagId).not_null())
-                    .col(date_time(NoteTag::CreateAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(NoteTag::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(NoteTag::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_note_id")
@@ -60,5 +69,6 @@ enum NoteTag {
     Table,
     NoteId,
     TagId,
-    CreateAt,
+    CreatedAt,
+    UpdatedAt
 }

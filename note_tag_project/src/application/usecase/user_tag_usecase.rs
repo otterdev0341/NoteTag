@@ -40,7 +40,7 @@ where
         let result = self.user_tag_repository.update_user_tag(user_id, old_tag, new_tag).await;
         match result {
             Ok(_) => Ok(()),
-            Err(_) => Err("Error updating user tag".to_string())
+            Err(err) => Err(format!("Error updating user tag: {}", err))
         }
     }
 }

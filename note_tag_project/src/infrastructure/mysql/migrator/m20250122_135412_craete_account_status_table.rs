@@ -18,8 +18,16 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(AccountStatus::Id).integer())
                     .col(string(AccountStatus::StatusDetail).not_null().unique_key())
-                    .col(date_time(AccountStatus::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(AccountStatus::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(AccountStatus::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(AccountStatus::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -40,7 +48,7 @@ pub enum AccountStatus {
     Table,
     Id,
     StatusDetail,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
     
 }

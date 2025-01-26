@@ -9,8 +9,8 @@ pub struct Model {
     pub id: i32,
     #[sea_orm(unique)]
     pub tag_name: String,
-    pub create_at: DateTime,
-    pub updated_at: DateTime,
+    pub create_at: Option<DateTimeUtc>,
+    pub updated_at: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -16,8 +16,16 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(NoteStatus::Id).integer())
                     .col(string(NoteStatus::StatusDetail))
-                    .col(date_time(NoteStatus::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(NoteStatus::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(NoteStatus::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(NoteStatus::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -38,6 +46,6 @@ pub enum NoteStatus {
     Table,
     Id,
     StatusDetail,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }

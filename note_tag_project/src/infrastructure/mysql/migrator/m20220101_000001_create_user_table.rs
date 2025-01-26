@@ -51,7 +51,7 @@ impl MigrationTrait for Migration {
                         .on_delete(ForeignKeyAction::Cascade)
                         .on_update(ForeignKeyAction::Cascade))
                     .col(
-                        ColumnDef::new(User::CreateAt)
+                        ColumnDef::new(User::CreatedAt)
                             .timestamp()
                             .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
                     )
@@ -88,6 +88,6 @@ pub enum User {
     Gender,
     Status,
     RoleId,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }

@@ -18,8 +18,16 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Gender::Id).integer())
                     .col(string(Gender::Detail).not_null().unique_key())
-                    .col(date_time(Gender::CreateAt).not_null().default(Expr::current_timestamp()))
-                    .col(date_time(Gender::UpdatedAt).not_null().default(Expr::current_timestamp()))
+                    .col(
+                        ColumnDef::new(Gender::CreatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP".to_owned()),
+                    )
+                    .col(
+                        ColumnDef::new(Gender::UpdatedAt)
+                            .timestamp()
+                            .extra("DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP".to_owned()),
+                    )
                     .to_owned(),
             )
             .await
@@ -40,6 +48,6 @@ pub enum Gender {
     Table,
     Id,
     Detail,
-    CreateAt,
+    CreatedAt,
     UpdatedAt
 }
