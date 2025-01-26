@@ -27,4 +27,12 @@ where
             Err(_) => Err("Error adding user tag".to_string())
         }
     }
+
+    pub async fn get_user_tags(&self, user_id: i32) -> Result<Vec<String>, String> {
+        let result = self.user_tag_repository.get_user_tags(user_id).await;
+        match result {
+            Ok(tags) => Ok(tags),
+            Err(_) => Err("Error getting user tags".to_string())
+        }
+    }
 }

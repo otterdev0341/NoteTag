@@ -1,8 +1,7 @@
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use rocket::{http::Status, request::{self, FromRequest, Outcome}, Request, State};
-use std::sync::Arc;
+use rocket::{http::Status, request::{self, FromRequest, Outcome}, Request};
 
-use crate::{configuration::jwt_config::JwtSecret, domain::dto::auth_dto::Claims, infrastructure::mysql::repositories::impl_user_repository::ImplUserRepository};
+use crate::{configuration::jwt_config::JwtSecret, domain::dto::auth_dto::Claims};
 
 pub struct AuthenticatedUser {
     pub id: i32,

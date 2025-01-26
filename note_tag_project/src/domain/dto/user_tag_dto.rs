@@ -1,19 +1,20 @@
-use rocket::serde;
+use rocket::{serde, Responder};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
 
 #[allow(non_snake_case)]
-#[derive(Deserialize, Serialize,ToSchema, Validate)]
+#[derive(Deserialize, Serialize,ToSchema, Validate, Responder, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct UserTagDto {
     #[validate(length(min = 1, message = "Tag must be at least 1 characters"))]
     pub tagName: String
 }
 
-#[derive(Deserialize, Serialize,ToSchema)]
+#[allow(non_snake_case)]
+#[derive(Deserialize, Serialize, ToSchema, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct UserTagListDto {
-    pub total_tag: i32,
-    pub tag_list: Vec<UserTagDto>
+    pub totalTag: usize,
+    pub tagList: Vec<String>
 }
