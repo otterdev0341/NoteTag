@@ -35,4 +35,12 @@ where
             Err(_) => Err("Error getting user tags".to_string())
         }
     }
+
+    pub async fn update_user_tag(&self, user_id: i32, old_tag: &str, new_tag: &str) -> Result<(), String> {
+        let result = self.user_tag_repository.update_user_tag(user_id, old_tag, new_tag).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err("Error updating user tag".to_string())
+        }
+    }
 }
