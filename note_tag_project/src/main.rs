@@ -26,10 +26,10 @@ async fn main() -> Result<(), rocket::Error>  {
     let database_config = DBConfig::default();
     let db_connection = mysql_connec(&database_config).await.unwrap();
     
-    
+    // fresh to drop all table and try migrate all new table
     // Migrator::fresh(&db_connection).await.unwrap();
     Migrator::up(&db_connection, None).await.unwrap();
-    // fresh to drop all table and try migrate all new table
+    
     
     // to config * at rocket use custom(conifg) instend of build()
     // let config = Config::figment()
