@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use rocket::{get, http::Status, post, put, routes, serde::json::Json, Route, State};
+use rocket::{delete, get, http::Status, post, put, routes, serde::json::Json, Route, State};
 use sea_orm::Update;
+use utoipa::openapi::tag;
 use validator::Validate;
 
 use crate::{application::usecase::user_tag_usecase::UserTagUseCase, domain::{dto::user_tag_dto::{UpdateUserTagDto, UserTagDto, UserTagListDto}, entities::user_tag}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_x_tag_repository::ImplUserTagRepository}};
@@ -11,7 +12,8 @@ pub fn user_tag_routes() -> Vec<Route> {
     routes![
         add_user_tag,
         get_user_tag,
-        update_user_tag
+        update_user_tag,
+        delete_tag_from_user
     ]
 }
 
@@ -65,5 +67,23 @@ pub async fn update_user_tag(
     match result {
         Ok(_) => Ok(SuccessResponse((Status::Ok, "User tag updated successfully".to_string()))),
         Err(err) => Err(ErrorResponse((Status::BadRequest, format!("Error updating user tag: {}", err))))
+    }
+}
+
+#[delete("/", data = "<tag_name>")]
+pub async fn delete_tag_from_user(
+    user: AuthenticatedUser,
+    user_tag_usecase: &State<Arc<UserTagUseCase<ImplUserTagRepository>>>,
+    tag_name: Json<UserTagDto>
+) -> Response<String> {
+
+    if tag_name.validate().is_err() {
+        return Err(ErrorResponse((Status::BadRequest, "Invalid tag name".to_string())));
+    }
+
+    let result = user_tag_usecase.delete_user_tag(user.id, &tag_name.tagName).await;
+    match result {
+        Ok(_) => Ok(SuccessResponse((Status::Ok, "User tag deleted successfully".to_string()))),
+        Err(err) => Err(ErrorResponse((Status::BadRequest, format!("Error deleting user tag: {}", err))))
     }
 }

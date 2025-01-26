@@ -5,7 +5,7 @@ use sea_orm_migration::async_trait;
 use sqlx::types::chrono::Utc;
 use tracing::{error, info};
 
-use crate::domain::{entities::{self, tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
+use crate::domain::{entities::{self, note_tag, tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
 
 pub struct ImplUserTagRepository {
     pub db : Arc<DatabaseConnection>
@@ -149,7 +149,7 @@ impl UserTagRepository for ImplUserTagRepository {
             };
     
         // Step 5: Update the drop the association and create a new one
-        let delete_result = result_find.delete(&txn).await;
+        let _delete_result = result_find.delete(&txn).await;
         let new_record = user_tag::ActiveModel {
             user_id: Set(the_user_id),
             tag_id: Set(the_new_tag_id),
@@ -173,7 +173,87 @@ impl UserTagRepository for ImplUserTagRepository {
     
 
     async fn delete_tag_from_user(&self, user_id: i32, tag_name: &str) -> Result<(), DbErr> {
-        todo!()
+        
+        // Begin the transaction
+        let txn = self.db.begin().await?;
+
+        // check is user valid
+        let _user = match user::Entity::find()
+            .filter(user::Column::Id.eq(user_id))
+            .one(&txn)
+            .await? {
+                Some(user) => user,
+                None => {
+                    error!("User with id {} not found", user_id);
+                    txn.rollback().await?;  // Rollback transaction
+                    return Err(DbErr::Custom(format!("User with id {} not found", user_id)));
+                }
+            };
+        
+        // check is tag valid in tag table
+        let tag = match tag::Entity::find()
+            .filter(tag::Column::TagName.eq(tag_name))
+            .one(&txn)
+            .await? {
+                Some(tag) => tag,
+                None => {
+                    error!("Tag with name {} not found", tag_name);
+                    txn.rollback().await?;  // Rollback transaction
+                    return Err(DbErr::Custom(format!("Tag with name {} not found", tag_name)));
+                }
+            };
+        // check is tag have associate with the user
+        let user_tag = match user_tag::Entity::find()
+            .filter(user_tag::Column::UserId.eq(user_id))
+            .filter(user_tag::Column::TagId.eq(tag.id))
+            .one(&txn)
+            .await? {
+                Some(user_tag) => user_tag,
+                None => {
+                    error!("User with id {} and tag with id {} not found", user_id, tag.id);
+                    txn.rollback().await?;  // Rollback transaction
+                    return Err(DbErr::Custom(format!("User with id {} and tag with id {} not found", user_id, tag.id)));
+                }
+            };
+        // checl if tag have no associate with note_tag
+        let note_tag = entities::note_tag::Entity::find()
+            .filter(entities::note_tag::Column::TagId.eq(tag.id))
+            .one(&txn)
+            .await;
+        match note_tag {
+            Ok(model) => match model {
+                Some(_data) => {
+                    error!("Tag with id {} is associated with note tag", tag.id);
+                    txn.rollback().await?;  // Rollback transaction
+                    return Err(DbErr::Custom(format!("Tag with id {} is associated with note tag", tag.id)));
+                },
+                None => {
+                    info!("Tag with id {} is not associated with note tag", tag.id);
+                }
+            }
+            Err(_) => {
+                error!("Error checking if tag with id {} is associated with note tag", tag.id);
+                txn.rollback().await?;  // Rollback transaction
+                return Err(DbErr::Custom(format!("Error checking if tag with id {} is associated with note tag", tag.id)));
+            }
+        }
+
+        // delete user_tag
+        let result_delete = user_tag.delete(&txn).await;
+        match result_delete {
+            Ok(_) => {
+                info!("User tag deleted successfully");
+                txn.commit().await?;
+            }
+            Err(e) => {
+                error!("Error deleting user tag: {}", e);
+                txn.rollback().await?;
+                return Err(DbErr::Custom(format!("Error deleting user tag: {}", e)));
+            }
+        }
+
+        Ok(())
+        
     
     }
 }

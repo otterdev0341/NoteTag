@@ -43,4 +43,12 @@ where
             Err(err) => Err(format!("Error updating user tag: {}", err))
         }
     }
+
+    pub async fn delete_user_tag(&self, user_id: i32, tag_name: &str) -> Result<(), String> {
+        let result = self.user_tag_repository.delete_tag_from_user(user_id, tag_name).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(err) => Err(format!("Error deleting user tag: {}", err))
+        }
+    }
 }
