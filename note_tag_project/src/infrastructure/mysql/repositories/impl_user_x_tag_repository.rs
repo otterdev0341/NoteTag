@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter, Related, Set, TransactionTrait};
 use sea_orm_migration::async_trait;
 
-use crate::domain::{entities::{tag, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
+use crate::domain::{entities::{tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
 
 pub struct ImplUserTagRepository {
     pub db : Arc<DatabaseConnection>
@@ -56,7 +56,26 @@ impl UserTagRepository for ImplUserTagRepository {
 
     async fn get_user_tags(&self, user_id: i32) -> Result<Vec<String>, DbErr> {
    
-        todo!()
+        // find the user
+        let user = user::Entity::find_by_id(user_id).one(&*self.db).await;
+        match user {
+            Ok(user) => {
+                // find the tags associated with the user
+                if let Some(user) = user {
+                    let tags = user.find_related(tag::Entity).all(&*self.db).await;
+                    match tags {
+                        Ok(tags) => {
+                            let tag_names = tags.iter().map(|tag| tag.tag_name.clone()).collect();
+                            Ok(tag_names)
+                        }
+                        Err(e) => Err(e),
+                    }
+                } else {
+                    Ok(vec![])
+                }
+            }
+            Err(e) => Err(e),
+        }
     }
 
     async fn update_user_tag(&self, user_id: i32, old_tag: &str, new_tag: &str) -> Result<(), DbErr> {

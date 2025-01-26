@@ -1,10 +1,17 @@
 use std::{result, sync::Arc};
 
-use rocket::{get, http::Status, post, serde::json::Json, State};
+use rocket::{get, http::Status, post, routes, serde::json::Json, Route, State};
 use validator::Validate;
 use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
 
 
+pub fn auth_routes() -> Vec<Route> {
+    routes![
+        sign_in,
+        sign_up,
+        me
+    ]
+}
 
 
 // Route 1
@@ -92,4 +99,5 @@ pub async fn me(user: AuthenticatedUser) -> Response<String> {
         "My user ID is: ".to_string() + user.id.to_string().as_str(),
     )))
 }
+
 
