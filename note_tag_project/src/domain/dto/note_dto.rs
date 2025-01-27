@@ -7,14 +7,14 @@ use validator::Validate;
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(crate = "rocket::serde")]
 pub struct ReqCreateNoteDto{
-    pub title: String,
-    pub content: String,
-    pub color: i32,
-    pub status: i32,
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub color: Option<String>,
+    pub status: Option<String>,
     pub noteTags: Option<Vec<String>>
 }
 
-
+// this is only on reposne, then dont need to validate this struct
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(crate = "rocket::serde")]
@@ -40,6 +40,7 @@ pub struct ReqUpdateNoteDto{
     pub noteTags: Option<Vec<String>>
 }
 
+// this is only on reposne, then dont need to validate this struct
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(crate = "rocket::serde")]
