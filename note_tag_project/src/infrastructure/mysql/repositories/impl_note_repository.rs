@@ -89,89 +89,100 @@ impl NoteRepository for ImplNoteRepository {
         // use note id to persist note tags to database from ReqCreateNoteDto
         let note_id = success_inserted.id;
         let note_tags = note_info.noteTags.unwrap_or_default();
-            // start for
-            for tag in note_tags {
-                // skip if it is empty string
-                if tag.trim().is_empty() {
-                    continue;
-                }
-                // check if the tag exist in the tag table if note create it and retrive id, if it exist retrive id
-                let each_tag_id = match tag::Entity::find()
-                    .filter(tag::Column::TagName.eq(&tag))
-                    .one(&txn)
-                    .await? {
-                    Some(tag) => Some(tag.id),
-                    None => {
-                        let new_tag = tag::ActiveModel {
-                            tag_name: Set(tag),
-                            ..Default::default()
-                        };
-                        let inserted_tag = new_tag.insert(&txn).await;
-                        match inserted_tag {
-                            Ok(tag) => Some(tag.id),
-                            Err(err) => {
-                                error!("Error creating tag: {:?}", err);
-                                txn.rollback().await?;
-                                return Err(err);
+        
+        
+        // check if the note tag is not empty
+        // mean we need to handle relation with tag_table, and user_tag_table and note_tag_table
+        let mut note_tags_id: Vec<i32> = vec![];
+        if !note_tags.is_empty() {
+            // ** in ths scope each item in note_tags: Vec<String> will call "the_tag"
+            // ** in ths scope each item in note_tags_id: Vec<String> will call "the_tag_id"
+            // case tag table
+                // .1 check if { the_tag } exist in the { tag table } if note "create it" and retrive id, if it exist retrive id
+                // .2 then add the id to { note_tags_id: Vec<i32> }
+                for the_tag in note_tags{
+                    let tag_id = match tag::Entity::find()
+                        .filter(tag::Column::TagName.eq(the_tag.clone()))
+                        .one(&txn)
+                        .await? {
+                        Some(tag) => continue,
+                        None => {
+                            let new_tag = tag::ActiveModel {
+                                tag_name: Set(the_tag.clone().to_owned()),
+                                ..Default::default()
+                            };
+                            let inserted_tag = new_tag.insert(&txn).await;
+                            match inserted_tag {
+                                Ok(tag) => Some(tag.id),
+                                Err(err) => {
+                                    error!("Error creating tag: {:?}", err);
+                                    txn.rollback().await?;
+                                    return Err(err);
+                                }
                             }
                         }
-                    }
-                };
-                // check if the tag have an association with the user_tag_table
-                // if exist skip, if not create it
-                let user_tag = user_tag::Entity::find()
-                    .filter(tag::Column::Id.eq(each_tag_id.unwrap()))
-                    .filter(user::Column::Id.eq(user_id))
-                    .one(&txn)
-                    .await?;
-                if user_tag.is_none() {
-                    let new_user_tag = user_tag::ActiveModel {
-                        user_id: Set(user_id),
-                        tag_id: Set(each_tag_id.unwrap()),
-                        ..Default::default()
                     };
-                    let inserted_user_tag = new_user_tag.insert(&txn).await;
-                    match inserted_user_tag {
-                        Ok(user_tag) => {
-                            info!("User tag created: {:?}", user_tag);
-                        },
-                        Err(err) => {
-                            error!("Error creating user tag: {:?}", err);
-                            txn.rollback().await?;
-                            return Err(err);
-                        }
-                    }
+                    note_tags_id.push(tag_id.unwrap());
                 }
-                // check if the tag_id have an association with the note_tag_table
-                // if exist skip, if not create it
-                let note_tag = note::Entity::find()
-                    .filter(tag::Column::Id.eq(each_tag_id.unwrap()))
-                    .filter(note::Column::Id.eq(note_id))
-                    .one(&txn)
-                    .await?;
-                if note_tag.is_none() {
-                    let new_note_tag = note_tag::ActiveModel {
-                        note_id: Set(note_id),
-                        tag_id: Set(each_tag_id.unwrap()),
-                        ..Default::default()
+            // case user_tag table
+                // .1 check if the tag have an association with the { user_tag_table }
+                // .2 if exist skip, if not create it by iterator over { note_tags_id: Vec<i32> }
+                for the_tag_id in note_tags_id.clone() {
+                    let user_tag_id = match user_tag::Entity::find()
+                        .filter(user_tag::Column::UserId.eq(user_id))
+                        .filter(user_tag::Column::TagId.eq(the_tag_id))
+                        .one(&txn)
+                        .await? {
+                        Some(user_tag) => continue,
+                        None => {
+                            let new_user_tag = user_tag::ActiveModel {
+                                user_id: Set(user_id),
+                                tag_id: Set(the_tag_id),
+                                ..Default::default()
+                            };
+                            let inserted_user_tag = new_user_tag.insert(&txn).await;
+                            match inserted_user_tag {
+                                Ok(user_tag) => Some(user_tag),
+                                Err(err) => {
+                                    error!("Error creating user_tag: {:?}", err);
+                                    txn.rollback().await?;
+                                    return Err(err);
+                                }
+                            }
+                        }
                     };
-                    let inserted_note_tag = new_note_tag.insert(&txn).await;
-                    match inserted_note_tag {
-                        Ok(note_tag) => {
-                            info!("Note tag created: {:?}", note_tag);
-                        },
-                        Err(err) => {
-                            error!("Error creating note tag: {:?}", err);
-                            txn.rollback().await?;
-                            return Err(err);
-                        }
-                    }
                 }
-            }
-            
-            // end for
-        // it comming as Vec<String> so we need to iterate over it to check and create
-        // then add relation from note and tag to join table
+            // case note_tag table
+                // .1 check if the tag_id have an association with the { note_tag_table }
+                // .2 if exist skip, if not create it by iterator over { note_tags_id: Vec<i32>
+                for the_tag_id in note_tags_id.clone(){
+                    let note_tag_id = match note_tag::Entity::find()
+                        .filter(note_tag::Column::NoteId.eq(note_id))
+                        .filter(note_tag::Column::TagId.eq(the_tag_id))
+                        .one(&txn)
+                        .await? {
+                        Some(_note_tag) => continue,
+                        None => {
+                            let new_note_tag = note_tag::ActiveModel {
+                                note_id: Set(note_id),
+                                tag_id: Set(the_tag_id),
+                                ..Default::default()
+                            };
+                            let inserted_note_tag = new_note_tag.insert(&txn).await;
+                            match inserted_note_tag {
+                                Ok(note_tag) => Some(note_tag),
+                                Err(err) => {
+                                    error!("Error creating note_tag: {:?}", err);
+                                    txn.rollback().await?;
+                                    return Err(err);
+                                }
+                            }
+                        }
+                    };
+                }
+        }
+        
+        
 
         // Commit transaction
         txn.commit().await?;
