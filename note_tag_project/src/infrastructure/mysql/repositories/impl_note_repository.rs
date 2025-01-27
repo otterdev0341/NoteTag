@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use rocket::{async_trait, response::status};
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
