@@ -3,11 +3,9 @@ use std::{sync::Arc, time::SystemTime};
 
 use bcrypt::verify;
 use jsonwebtoken::{encode, EncodingKey, Header};
-use rocket::{http::Status, serde::json::Json};
-use sea_orm::DbErr;
-use sea_orm_migration::async_trait;
+use rocket::http::Status;
 
-use crate::{ configuration::jwt_config::{self, JwtSecret}, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::{http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
+use crate::{ configuration::jwt_config::JwtSecret, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::http::response_type::response_type::ErrorResponse};
 
 pub struct UserUseCase<T>
 where 

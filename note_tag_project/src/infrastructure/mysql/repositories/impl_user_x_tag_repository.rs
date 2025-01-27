@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter, Related, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ModelTrait, QueryFilter, Set, TransactionTrait};
 use sea_orm_migration::async_trait;
-use sqlx::types::chrono::Utc;
 use tracing::{error, info};
 
-use crate::domain::{entities::{self, note_tag, tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
+use crate::domain::{entities::{self, tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
 
 pub struct ImplUserTagRepository {
     pub db : Arc<DatabaseConnection>
