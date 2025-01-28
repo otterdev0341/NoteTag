@@ -5,7 +5,7 @@ use bcrypt::verify;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use rocket::http::Status;
 
-use crate::{ configuration::jwt_config::JwtSecret, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::http::response_type::response_type::ErrorResponse};
+use crate::{ configuration::jwt_config::JwtSecret, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::require_implementation::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::http::response_type::response_type::ErrorResponse};
 
 pub struct UserUseCase<T>
 where 

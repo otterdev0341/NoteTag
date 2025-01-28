@@ -3,7 +3,7 @@ use bcrypt::{hash, DEFAULT_COST};
 use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set};
 use sea_orm_migration::async_trait;
 use tracing::info;
-use crate::domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto}, entities::{gender, user}, repositories::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}};
+use crate::domain::{dto::auth_dto::{ReqSignInDto, ReqSignUpDto}, entities::{gender, user}, repositories::require_implementation::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}};
 
 pub struct ImplUserRepository
 {

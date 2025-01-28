@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, repositories::trait_note_repository::NoteRepository};
+use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, repositories::require_implementation::trait_note_repository::NoteRepository, };
 
 pub struct NoteUseCase<T>
 where 

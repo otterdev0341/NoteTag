@@ -1,13 +1,2 @@
-pub mod trait_role_repository;
-pub mod trait_account_status_repository;
-pub mod trait_gender_repository;
-pub mod trait_tag_repository;
-pub mod trait_note_hex_color_repository;
-pub mod trait_note_status;
-pub mod trait_note_repository;
-pub mod trait_user_repository;
-pub mod trait_user_x_tag_repository;
-pub mod trait_note_x_tag_repository;
-pub mod trait_user_helper_repository;
-pub mod trait_entity_helper;
-pub mod trait_association_helper_fully;
+pub mod fully_implemented;
+pub mod require_implementation;

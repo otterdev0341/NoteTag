@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::domain::repositories::trait_user_x_tag_repository::UserTagRepository;
+use crate::domain::repositories::require_implementation::trait_user_x_tag_repository::UserTagRepository;
+
+
 
 pub struct UserTagUseCase<T>
 where 

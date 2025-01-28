@@ -1,10 +1,9 @@
 use std::result;
 
 use sea_orm::{ColumnTrait, DatabaseTransaction, DbErr, EntityTrait, QueryFilter, Set};
-use sea_orm_migration::{async_trait, seaql_migrations::Model};
-use utoipa::openapi::info;
+use sea_orm_migration::async_trait;
 use tracing::info;
-use crate::{domain::entities::{note_tag, tag, user, user_tag}, infrastructure::http::controller::auth::me};
+use crate::domain::entities::{note_tag, tag, user_tag};
 
 
 

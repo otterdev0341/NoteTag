@@ -4,7 +4,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTr
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
 
-use crate::domain::{entities::{self, tag, user, user_tag}, repositories::trait_user_x_tag_repository::UserTagRepository};
+use crate::domain::{entities::{self, tag, user, user_tag}, repositories::require_implementation::trait_user_x_tag_repository::UserTagRepository};
 
 pub struct ImplUserTagRepository {
     pub db : Arc<DatabaseConnection>

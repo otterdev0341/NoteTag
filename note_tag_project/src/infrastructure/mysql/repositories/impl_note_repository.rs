@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransaction, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
 
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
 
-use crate::{application::usecase::user_tag_usecase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status, note_tag, tag, user, user_tag}, repositories::{trait_association_helper_fully::AssociationTagHelperFullyImplemented, trait_entity_helper::EntityHelperFullyImplemented, trait_note_repository::NoteRepository}}};
+use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::{fully_implemented::{trait_association_helper_fully::AssociationTagHelperFullyImplemented, trait_entity_helper_fully::EntityHelperFullyImplemented}, require_implementation::trait_note_repository::NoteRepository}};
 
 pub struct ImplNoteRepository {
     pub db: Arc<DatabaseConnection>
@@ -154,6 +154,10 @@ impl NoteRepository for ImplNoteRepository {
 
     async fn get_note_by_id(&self, user_id: i32, note_id: i32) -> Result<Option<ResNoteEntryDto>, DbErr> {
         // Implement the function logic here
+        // is_user_active
+        // is_note_exist
+        // is_note_associate_with_user
+
         Ok(None)
     }
 
