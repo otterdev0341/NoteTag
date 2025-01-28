@@ -2,7 +2,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransac
 use sea_orm_migration::async_trait;
 use tracing::error;
 
-use crate::domain::{entities::{note_tag, tag, user, user_tag}, repositories::{trait_entity_helper::EntityHelper, trait_many_to_many_helper::AssociationHelper}};
+use crate::domain::{entities::{note_tag, tag, user, user_tag}, repositories::{trait_entity_helper::EntityHelper, trait_association_helper::AssociationHelper}};
 
 #[async_trait::async_trait]
 impl EntityHelper for DatabaseConnection {
@@ -27,7 +27,7 @@ impl EntityHelper for DatabaseConnection {
         Ok(inserted_record)
     }
 
-    async fn is_user_exist_in_user_table(
+    async fn is_user_status_is_active(
         txn: &DatabaseTransaction,
         user_id: i32,
     ) -> Result<bool, DbErr> {
@@ -44,20 +44,20 @@ impl AssociationHelper for DatabaseConnection{
     async fn is_this_tag_is_exist_in_tag_table_or_create(
         txn: &DatabaseTransaction,
         user_tag: &str,
-    ) -> Result<Option<i32>, DbErr> {
+    ) -> Result<i32, DbErr> {
         let result = tag::Entity::find()
             .filter(tag::Column::TagName.eq(user_tag))
             .one(txn)
             .await?;
         match result {
-            Some(tag) => Ok(Some(tag.id)),
+            Some(tag) => Ok(tag.id),
             None => {
                 let new_tag = tag::ActiveModel {
                     tag_name: Set(user_tag.to_string()),
                     ..Default::default()
                 };
                 let inserted_tag = new_tag.insert(txn).await?;
-                Ok(Some(inserted_tag.id))
+                Ok(inserted_tag.id)
             }
         }
 

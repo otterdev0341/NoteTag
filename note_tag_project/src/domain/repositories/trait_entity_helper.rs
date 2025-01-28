@@ -15,7 +15,7 @@ pub trait EntityHelper {
         E::Model: IntoActiveModel<E::ActiveModel> + Send + Sync,
         E::ActiveModel: ActiveModelTrait<Entity = E> + Send;
 
-    async fn is_user_exist_in_user_table(
+    async fn is_user_status_is_active(
         txn: &DatabaseTransaction,
         user_id: i32,
     ) -> Result<bool, DbErr>;

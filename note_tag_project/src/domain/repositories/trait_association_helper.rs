@@ -10,7 +10,7 @@ pub trait AssociationHelper {
     async fn is_this_tag_is_exist_in_tag_table_or_create(
         txn: &DatabaseTransaction,
         user_tag: &str,
-    ) -> Result<Option<i32>, DbErr>;
+    ) -> Result<i32, DbErr>;
 
     async fn is_tag_id_is_associate_with_this_user(
         txn: &DatabaseTransaction,
