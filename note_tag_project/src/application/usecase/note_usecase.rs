@@ -1,5 +1,8 @@
 use std::sync::Arc;
 
+use rocket::serde::json::Json;
+use sea_orm::DbErr;
+
 use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, repositories::require_implementation::trait_note_repository::NoteRepository, };
 
 pub struct NoteUseCase<T>
@@ -37,8 +40,17 @@ where
     }
 
     pub async fn get_note_by_id(&self, user_id: i32, note_id: i32) -> Result<ResNoteEntryDto, String> {
-        todo!("Implement get_note_by_id method in NoteUseCase");
+        
         let result = self.note_repository.get_note_by_id(user_id, note_id).await;
+        match result {
+            Ok(note) => {
+                match note {
+                    Some(note) => Ok(note),
+                    None => Err("Note not found".to_string())
+                }
+            },
+            Err(_) => Err("Error getting note".to_string())
+        }
 
     }
 

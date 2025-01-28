@@ -1,9 +1,8 @@
-use std::result;
-
-use sea_orm::{ColumnTrait, DatabaseTransaction, DbErr, EntityTrait, QueryFilter, Set};
+use rocket::response::status;
+use sea_orm::{ColumnTrait, DatabaseTransaction, DbErr, EntityOrSelect, EntityTrait, QueryFilter, Set};
 use sea_orm_migration::async_trait;
 use tracing::info;
-use crate::domain::entities::{note_tag, tag, user_tag};
+use crate::domain::entities::{note, note_hex_color, note_status, note_tag, prelude::NoteHexColor, tag, user_tag};
 
 
 
@@ -124,6 +123,73 @@ pub trait AssociationTagHelperFullyImplemented {
         info!("tag is associate with note with new crated association");
         Ok(inserted_model)
     }
+
+    async fn get_tags_for_note_id(
+        &self,
+        txn: &DatabaseTransaction,
+        note_id: i32,
+    ) -> Result<Vec<String>, DbErr> {
+        let tags = note_tag::Entity::find()
+            .filter(note_tag::Column::NoteId.eq(note_id))
+            .all(txn)
+            .await?;
+        let mut tag_names = Vec::new();
+        for tag in tags {
+            let tag_name = tag::Entity::find_by_id(tag.tag_id)
+                            .one(txn)
+                            .await?
+                            .ok_or(DbErr::RecordNotFound("Failed to fetch tag name".to_string()))?
+                            .tag_name;
+            tag_names.push(tag_name);
+        }
+        Ok(tag_names)
+    }
+
+    async fn is_user_id_associate_with_note_id(
+        &self,
+        txn: &DatabaseTransaction,
+        user_id: i32,
+        note_id: i32,
+    ) -> Result<bool, DbErr> {
+        let is_associate = note::Entity::find()
+            .filter(note::Column::Id.eq(note_id))
+            .filter(note::Column::UserId.eq(user_id))
+            .one(txn)
+            .await?;
+        match is_associate {
+            Some(_) => Ok(true),
+            None => Ok(false)
+        }
+    }
+
+    async fn get_color_detail_by_color_id(
+        &self,
+        txn: &DatabaseTransaction,
+        color_id: i32,
+    ) -> Result<String, DbErr> {
+        let color = note_hex_color::Entity::find()
+            .filter(note_hex_color::Column::Id.eq(color_id))
+            .one(txn)
+            .await?
+            .ok_or(DbErr::RecordNotFound("Failed to fetch color detail".to_string()))?.hex_color;
+        
+        Ok(color)
+    }
+
+    async fn get_status_detail_by_status_id(
+        &self,
+        txn: &DatabaseTransaction,
+        status_id: i32,
+    ) -> Result<String, DbErr> {
+        let status = note_status::Entity::find()
+            .filter(note_status::Column::Id.eq(status_id))
+            .one(txn)
+            .await?
+            .ok_or(DbErr::RecordNotFound("Failed to fetch status detail".to_string()))?.status_detail;
+        
+        Ok(status)
+    }
+    
     
 }
 

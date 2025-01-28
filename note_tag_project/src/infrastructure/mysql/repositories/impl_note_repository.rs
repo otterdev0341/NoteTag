@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
+use rocket::response::status;
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, QueryFilter, Set, TransactionTrait};
 
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
@@ -153,12 +154,51 @@ impl NoteRepository for ImplNoteRepository {
     }
 
     async fn get_note_by_id(&self, user_id: i32, note_id: i32) -> Result<Option<ResNoteEntryDto>, DbErr> {
-        // Implement the function logic here
-        // is_user_active
-        // is_note_exist
-        // is_note_associate_with_user
-
-        Ok(None)
+        // Begin transaction
+        let txn = self.db.begin().await?;
+    
+        // is_user_active check
+        let is_user_active = self.is_user_status_is_active(&txn, user_id).await?;
+        if !is_user_active {
+            error!("User is not active");
+            txn.rollback().await?;
+            return Err(DbErr::Custom("User is not active, please contact admin".to_string()));
+        }
+    
+        // Check if the note is associated with the user
+        let found_note = note::Entity::find()
+            .filter(note::Column::Id.eq(note_id))
+            .filter(note::Column::UserId.eq(user_id))
+            .one(&txn)
+            .await?;
+    
+        match found_note {
+            Some(note) => {
+                // Fetch associated tags for the note
+                let tags_for_note = self.get_tags_for_note_id(&txn, note_id).await?;
+                let color = self.get_color_detail_by_color_id(&txn, note.color).await?;
+                let status = self.get_status_detail_by_status_id(&txn, note.status).await?;
+                // Prepare the response DTO
+                let return_note = ResNoteEntryDto {
+                    id: note.id,
+                    title: note.title.clone(),
+                    content: note.detail.clone(),
+                    colorCode: color,
+                    status: status,
+                    noteTags: tags_for_note,
+                    createdAt: note.created_at.map(|dt| dt.to_string()).unwrap_or_default(),
+                };
+    
+                // Return the response
+                Ok(Some(return_note))
+            },
+            None => {
+                // Handle case where note is not found
+                error!("Note is not associated with user");
+                txn.rollback().await?;
+                Err(DbErr::Custom("Note is not associated with user".to_string()))
+            },
+        }
     }
 
     async fn get_all_note(&self, user_id: i32) -> Result<Vec<ResNoteEntryDto>, DbErr> {
