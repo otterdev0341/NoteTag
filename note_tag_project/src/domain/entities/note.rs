@@ -20,7 +20,7 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::note_hex_color::Entity",
-        from = "Column::Id",
+        from = "Column::Color",
         to = "super::note_hex_color::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"

@@ -1,14 +1,16 @@
 use std::sync::Arc;
 
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransaction, DbErr, EntityTrait, QueryFilter, Set, TransactionTrait};
+
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
 
-use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_status, note_tag, tag, user, user_tag}, repositories::trait_note_repository::NoteRepository};
+use crate::{application::usecase::user_tag_usecase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status, note_tag, tag, user, user_tag}, repositories::{trait_association_helper_fully::AssociationTagHelperFullyImplemented, trait_entity_helper::EntityHelperFullyImplemented, trait_note_repository::NoteRepository}}};
 
 pub struct ImplNoteRepository {
     pub db: Arc<DatabaseConnection>
 }
+
 
 impl ImplNoteRepository {
     pub fn new(db: Arc<DatabaseConnection>) -> Self {
@@ -16,7 +18,23 @@ impl ImplNoteRepository {
             db
         }
     }
+
 }
+
+#[async_trait::async_trait]
+impl EntityHelperFullyImplemented for ImplNoteRepository {
+    // use complete funtion that already implement in Trait EntityHelper,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
+#[async_trait::async_trait]
+impl AssociationTagHelperFullyImplemented for ImplNoteRepository {
+    // use complete funtion that already implement in Trait AssociationTagHelper,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
 
 #[async_trait::async_trait]
 impl NoteRepository for ImplNoteRepository {
@@ -26,24 +44,23 @@ impl NoteRepository for ImplNoteRepository {
         // Begin transaction
         let txn = self.db.begin().await?;
 
-        // check is user exist in the database
-        let user = match user::Entity::find()
-        .filter(user::Column::Id.eq(user_id))
-        .one(&txn)
-        .await? {
-        Some(user) => Some(user),
-        None => {
-            error!("User not found");
-            txn.rollback().await?;
-            return Err(DbErr::Custom((format!("The user with id {} not found", user_id)).into()));
-            }
+        // check is status is active
+        // the use must be exist if not, authentification middleware should be handle this
+        let is_user_active = self.is_user_status_is_active(&txn, user_id).await?;
+        match is_user_active {
+            false => {
+                error!("User is not active");
+                txn.rollback().await?;
+                return Err(DbErr::Custom(format!("User is not active, please contact admin")));
+            },
+            _ => {}
         };
 
         // get {{color id}} by ReqCreateNoteDto from string to i32 to persist to database
         // user can't craete persist new color to database
         // default color id is 1
-        let get_color_id = match note::Entity::find()
-            .filter(note::Column::Color.eq(note_info.color))
+        let get_color_id = match note_hex_color::Entity::find()
+            .filter(note_hex_color::Column::HexColor.eq(note_info.color))
             .one(&txn)
             .await? {
             Some(color) => Some(color.id),
@@ -54,6 +71,7 @@ impl NoteRepository for ImplNoteRepository {
         // get {{Note status}} id by ReqCreateNoteDto from string to i32 to persist to database
         // user can't craete persist new status to database
         // default status id is 1 = unpin
+        // note color comming as string (#aabb7755) need to find the id from the database
         let get_status_id =  match note_status::Entity::find()
             .filter(note_status::Column::StatusDetail.eq(note_info.status))
             .one(&txn)
@@ -92,101 +110,46 @@ impl NoteRepository for ImplNoteRepository {
         
         // check if the note tag is not empty
         // mean we need to handle relation with tag_table, and user_tag_table and note_tag_table
-        let mut note_tags_id: Vec<i32> = vec![];
+        
         if !note_tags.is_empty() {
             // ** in ths scope each item in note_tags: Vec<String> will call "the_tag"
             // ** in ths scope each item in note_tags_id: Vec<String> will call "the_tag_id"
-            // case tag table
+            for the_tag in note_tags {
+                // case tag table
                 // .1 check if { the_tag } exist in the { tag table } if note "create it" and retrive id, if it exist retrive id
-                // .2 then add the id to { note_tags_id: Vec<i32> }
-                for the_tag in note_tags{
-                    let tag_id = match tag::Entity::find()
-                        .filter(tag::Column::TagName.eq(the_tag.clone()))
-                        .one(&txn)
-                        .await? {
-                        Some(tag) => continue,
-                        None => {
-                            let new_tag = tag::ActiveModel {
-                                tag_name: Set(the_tag.clone().to_owned()),
-                                ..Default::default()
-                            };
-                            let inserted_tag = new_tag.insert(&txn).await;
-                            match inserted_tag {
-                                Ok(tag) => Some(tag.id),
-                                Err(err) => {
-                                    error!("Error creating tag: {:?}", err);
-                                    txn.rollback().await?;
-                                    return Err(err);
-                                }
-                            }
-                        }
-                    };
-                    note_tags_id.push(tag_id.unwrap());
-                }
-            // case user_tag table
+                let the_tag_id = self.is_this_tag_is_exist_in_tag_table_or_create(&txn, &the_tag).await?;
+                // case user_tag table
                 // .1 check if the tag have an association with the { user_tag_table }
                 // .2 if exist skip, if not create it by iterator over { note_tags_id: Vec<i32> }
-                for the_tag_id in note_tags_id.clone() {
-                    let user_tag_id = match user_tag::Entity::find()
-                        .filter(user_tag::Column::UserId.eq(user_id))
-                        .filter(user_tag::Column::TagId.eq(the_tag_id))
-                        .one(&txn)
-                        .await? {
-                        Some(user_tag) => continue,
-                        None => {
-                            let new_user_tag = user_tag::ActiveModel {
-                                user_id: Set(user_id),
-                                tag_id: Set(the_tag_id),
-                                ..Default::default()
-                            };
-                            let inserted_user_tag = new_user_tag.insert(&txn).await;
-                            match inserted_user_tag {
-                                Ok(user_tag) => Some(user_tag),
-                                Err(err) => {
-                                    error!("Error creating user_tag: {:?}", err);
-                                    txn.rollback().await?;
-                                    return Err(err);
-                                }
-                            }
-                        }
-                    };
+                let user_tag_associate = self.is_tag_id_is_associate_with_this_user_or_create(&txn, user_id, the_tag_id).await;
+                match user_tag_associate {
+                    Ok(_) => {},
+                    Err(err) => {
+                        error!("Error creating user tag: {:?}", err);
+                        txn.rollback().await?;
+                        return Err(err);
+                    }
                 }
-            // case note_tag table
+                // case note_tag table
                 // .1 check if the tag_id have an association with the { note_tag_table }
                 // .2 if exist skip, if not create it by iterator over { note_tags_id: Vec<i32>
-                for the_tag_id in note_tags_id.clone(){
-                    let note_tag_id = match note_tag::Entity::find()
-                        .filter(note_tag::Column::NoteId.eq(note_id))
-                        .filter(note_tag::Column::TagId.eq(the_tag_id))
-                        .one(&txn)
-                        .await? {
-                        Some(_note_tag) => continue,
-                        None => {
-                            let new_note_tag = note_tag::ActiveModel {
-                                note_id: Set(note_id),
-                                tag_id: Set(the_tag_id),
-                                ..Default::default()
-                            };
-                            let inserted_note_tag = new_note_tag.insert(&txn).await;
-                            match inserted_note_tag {
-                                Ok(note_tag) => Some(note_tag),
-                                Err(err) => {
-                                    error!("Error creating note_tag: {:?}", err);
-                                    txn.rollback().await?;
-                                    return Err(err);
-                                }
-                            }
-                        }
-                    };
+                let note_tag_associate = self.is_tag_id_is_associate_with_note_id_or_create(&txn, note_id, the_tag_id).await;
+                match note_tag_associate {
+                    Ok(_) => {},
+                    Err(err) => {
+                        error!("Error creating note tag: {:?}", err);
+                        txn.rollback().await?;
+                        return Err(err);
+                    }
                 }
+            }       
         }
         
-        
-
         // Commit transaction
         txn.commit().await?;
-
         Ok(())
+        
+
     }
 
     async fn get_note_by_id(&self, user_id: i32, note_id: i32) -> Result<Option<ResNoteEntryDto>, DbErr> {

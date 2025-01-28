@@ -31,7 +31,7 @@ impl MigrationTrait for Migration {
                     .col(integer(Note::Color).not_null())
                         .foreign_key(ForeignKey::create()
                         .name("fk_note_color")
-                        .from(Note::Table, Note::Id)
+                        .from(Note::Table, Note::Color)
                         .to(NoteHexColor::Table, NoteHexColor::Id)
                         .on_delete(ForeignKeyAction::Cascade)
                         .on_update(ForeignKeyAction::Cascade)
