@@ -72,8 +72,8 @@ where
     }
 
     pub async fn delete_note_by_id(&self, user_id: i32, note_id: i32) -> Result<(), String> {
-        todo!("Implement delete_note method in NoteUseCase");
-        let result = self.note_repository.delete_note_by_id(user_id, note_id).await;
+        
+        let result: Result<(), DbErr> = self.note_repository.delete_note_by_id(user_id, note_id).await;
         match result {
             Ok(_) => Ok(()),
             Err(_) => Err("Error deleting note".to_string())

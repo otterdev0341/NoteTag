@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use rocket::{get, http::Status, post, put, routes, serde::json::Json, Route, State};
+use rocket::{delete, get, http::Status, post, put, routes, serde::json::Json, Route, State};
+use sea_orm::DbErr;
 
 use crate::{application::usecase::note_usecase::NoteUseCase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_repository::ImplNoteRepository}};
 
@@ -10,7 +11,8 @@ pub fn note_routes() -> Vec<Route> {
         create_note,
         get_note_by_id,
         get_all_note,
-        update_note
+        update_note,
+        delete_note
     ]
 }
 
@@ -63,5 +65,19 @@ pub async fn update_note(
     match result {
         Ok(_) => Ok(SuccessResponse((Status::Ok, "Note updated successfully".to_string()))),
         Err(_) => Err(ErrorResponse((Status::BadRequest, "Error updating note".to_string())))
+    }
+}
+
+#[delete("/<note_id>")]
+pub async fn delete_note(
+    user: AuthenticatedUser,
+    note_id: i32,
+    note_usecase: &State<Arc<NoteUseCase<ImplNoteRepository>>>,    
+) 
+-> Response<String>{
+    let result= note_usecase.delete_note_by_id(user.id, note_id).await;
+    match result {
+        Ok(_) => Ok(SuccessResponse((Status::Ok, "Note deleted successfully".to_string()))),
+        Err(_) => Err(ErrorResponse((Status::BadRequest, "Error deleting note".to_string())))
     }
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use rocket::response::status;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, QueryFilter, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, IntoActiveModel, ModelTrait, QueryFilter, Set, TransactionTrait};
 
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
@@ -289,7 +289,45 @@ impl NoteRepository for ImplNoteRepository {
     }
 
     async fn delete_note_by_id(&self, user_id: i32, note_id: i32) -> Result<(), DbErr> {
-        // Implement the function logic here
+        // begin trasaction
+        let txn = self.db.begin().await?;
+        // is user_active
+        let is_user_active = self.is_user_status_is_active(&txn, user_id).await?;
+        if !is_user_active {
+            error!("User is not active");
+            txn.rollback().await?;
+            return Err(DbErr::Custom("User is not active, please contact admin".to_string()));
+        }
+        // is note_id associate with user_id
+        let note_association = self.is_user_id_associate_with_note_id(&txn, user_id, note_id).await?;
+        if note_association {
+            let note_delete = note::Entity::find()
+                .filter(note::Column::Id.eq(note_id))
+                .one(&txn)
+                .await?;
+            match note_delete {
+                Some(note) => {
+                    let delete_result = note.delete(&txn).await;
+                    match delete_result {
+                        Ok(_) => {},
+                        Err(err) => {
+                            error!("Error deleting note: {:?}", err);
+                            txn.rollback().await?;
+                            return Err(err);
+                        }
+                    }
+                },
+                None => {
+                    error!("Note is not associate with user");
+                    txn.rollback().await?;
+                    return Err(DbErr::Custom("Note is not associate with user".to_string()));
+                }
+            }
+        }else{
+            return Err(DbErr::Custom("Note is not associate with user".to_string()));
+        }
+        // commit transaction
+        txn.commit().await?;
         Ok(())
     }
 }
