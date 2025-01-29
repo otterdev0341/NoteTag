@@ -188,6 +188,7 @@ impl NoteRepository for ImplNoteRepository {
                     status: status,
                     noteTags: tags_for_note,
                     createdAt: note.created_at.map(|dt| dt.to_string()).unwrap_or_default(),
+                    updatedAt: note.updated_at.map(|dt| dt.to_string()).unwrap_or_default(),
                 };
     
                 // Return the response
@@ -234,6 +235,7 @@ impl NoteRepository for ImplNoteRepository {
                 status: status,
                 noteTags: tags_for_note,
                 createdAt: note.created_at.map(|dt| dt.to_string()).unwrap_or_default(),
+                updatedAt: note.updated_at.map(|dt| dt.to_string()).unwrap_or_default(),
             };
             return_notes.push(temp_note);
         }

@@ -26,6 +26,7 @@ pub struct ResNoteEntryDto {
     pub status: String,
     pub noteTags: Vec<String>,
     pub createdAt: String,
+    pub updatedAt: String
 }
 
 #[allow(non_snake_case)]
