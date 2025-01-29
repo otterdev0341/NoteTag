@@ -5,6 +5,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityOr
 
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
+use utoipa::openapi::tag;
 
 use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::{fully_implemented::{trait_association_helper_fully::AssociationTagHelperFullyImplemented, trait_entity_helper_fully::EntityHelperFullyImplemented}, require_implementation::trait_note_repository::NoteRepository}};
 
@@ -242,7 +243,46 @@ impl NoteRepository for ImplNoteRepository {
     }
 
     async fn update_note_by_id(&self, user_id: i32, note_id: i32, note_info: ReqUpdateNoteDto) -> Result<(), DbErr> {
-        // Implement the function logic here
+        // begin trasaction
+        let txn = self.db.begin().await?;
+        // check is user_active
+        let is_user_active = self.is_user_status_is_active(&txn, user_id).await?;
+        if !is_user_active {
+            error!("User is not active");
+            txn.rollback().await?;
+            return Err(DbErr::Custom("User is not active, please contact admin".to_string()));
+        }
+        // check is note_id is associate with user_id
+        let note_association = self.is_user_id_associate_with_note_id(&txn, user_id, note_id).await?;
+        if !note_association {
+            error!("Note is not associate with user");
+            txn.rollback().await?;
+            return Err(DbErr::Custom("Note is not associate with user".to_string()));
+        }
+        // Persist update note phase
+        // 1. update only the field that is not None
+        let update_note = self.update_note_with_option_field(&txn, note_id, note_info.clone()).await?;
+        
+        // 2. update the tag
+            // tag can be muntiple, so we need to check if the tag is exist or not or create it
+            // old is : ["cat","dog"] and new is : ["cat","bat", "otter"]
+            // mean need to check new tag is exist or not, if not create it
+            // and remove old note_tag and create a new for the new tag
+            // 2.1 drop all note_tag that associate with the note_id
+        self.delete_all_note_tag_relation_by_note_id(&txn, note_id).await?;
+            // 2.2 create and relate new note_tag with the note_id
+        for tag in note_info.noteTags.unwrap() {
+            
+            if tag.trim().is_empty() {
+                continue;
+            }
+            
+            let tag_id = self.is_this_tag_is_exist_in_tag_table_or_create(&txn, &tag).await?;
+            let user_tag_associate = self.is_tag_id_is_associate_with_this_user_or_create(&txn, user_id, tag_id).await?;
+            let note_tag_associate = self.is_tag_id_is_associate_with_note_id_or_create(&txn, note_id, tag_id).await?;
+        }
+        // commit transaction
+        txn.commit().await?;
         Ok(())
     }
 

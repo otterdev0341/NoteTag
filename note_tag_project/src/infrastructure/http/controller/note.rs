@@ -1,15 +1,16 @@
 use std::sync::Arc;
 
-use rocket::{get, http::Status, post, routes, serde::json::Json, Route, State};
+use rocket::{get, http::Status, post, put, routes, serde::json::Json, Route, State};
 
-use crate::{application::usecase::note_usecase::NoteUseCase, domain::{dto::note_dto::{ReqCreateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_repository::ImplNoteRepository}};
+use crate::{application::usecase::note_usecase::NoteUseCase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_repository::ImplNoteRepository}};
 
 
 pub fn note_routes() -> Vec<Route> {
     routes![
         create_note,
         get_note_by_id,
-        get_all_note
+        get_all_note,
+        update_note
     ]
 }
 
@@ -48,5 +49,19 @@ pub async fn get_all_note(
     match result {
         Ok(notes) => Ok(SuccessResponse((Status::Ok, Json(notes)))),
         Err(_) => Err(ErrorResponse((Status::BadRequest, "Error getting notes".to_string())))
+    }
+}
+
+
+#[put("/", data = "<note_info>")]
+pub async fn update_note(
+    user: AuthenticatedUser,
+    note_info: Json<ReqUpdateNoteDto>,
+    note_usecase: &State<Arc<NoteUseCase<ImplNoteRepository>>>,
+) -> Response<String> {
+    let result = note_usecase.update_note_by_id(user.id, note_info.into_inner()).await;
+    match result {
+        Ok(_) => Ok(SuccessResponse((Status::Ok, "Note updated successfully".to_string()))),
+        Err(_) => Err(ErrorResponse((Status::BadRequest, "Error updating note".to_string())))
     }
 }

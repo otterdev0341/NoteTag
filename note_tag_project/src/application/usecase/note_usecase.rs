@@ -60,8 +60,13 @@ where
 
     }
 
-    pub async fn update_note_by_id(&self, user_id: i32, note_info: ReqUpdateNoteDto) -> Result<(), String> {
-        todo!("Implement update_note method in NoteUseCase");
+    pub async fn update_note_by_id(&self, user_id: i32 ,note_info: ReqUpdateNoteDto) -> Result<(), String> {
+        
+        let result: Result<(), DbErr> = self.note_repository.update_note_by_id(user_id, note_info.id ,note_info).await;
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err("Error updating note".to_string())
+        }
         
    
     }

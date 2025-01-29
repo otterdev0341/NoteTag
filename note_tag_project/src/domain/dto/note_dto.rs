@@ -29,7 +29,7 @@ pub struct ResNoteEntryDto {
 }
 
 #[allow(non_snake_case)]
-#[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, Validate, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct ReqUpdateNoteDto{
     pub id: i32,

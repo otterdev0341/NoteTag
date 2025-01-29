@@ -1,8 +1,9 @@
 use rocket::response::status;
-use sea_orm::{ColumnTrait, DatabaseTransaction, DbErr, EntityOrSelect, EntityTrait, QueryFilter, Set};
-use sea_orm_migration::async_trait;
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseTransaction, DbErr, EntityOrSelect, EntityTrait, IntoActiveModel, QueryFilter, Set};
+use sea_orm_migration::{async_trait, seaql_migrations::Entity};
+use sqlx::types::chrono;
 use tracing::info;
-use crate::domain::entities::{note, note_hex_color, note_status, note_tag, prelude::NoteHexColor, tag, user_tag};
+use crate::domain::{dto::note_dto::ReqUpdateNoteDto, entities::{note, note_hex_color, note_status, note_tag, prelude::NoteHexColor, tag, user_tag}};
 
 
 
@@ -124,6 +125,39 @@ pub trait AssociationTagHelperFullyImplemented {
         Ok(inserted_model)
     }
 
+
+    async fn update_note_with_option_field(
+        &self,
+        txn: &DatabaseTransaction,
+        note_id: i32,
+        note_info: ReqUpdateNoteDto
+    ) -> Result<note::Model, DbErr>{
+        let note_model = note::Entity::find()
+            .filter(note::Column::Id.eq(note_id))
+            .one(txn)
+            .await?
+            .ok_or(DbErr::RecordNotFound("Failed to fetch note".to_string()))?;
+        let mut note = note_model.into_active_model();
+        if let Some(title) = note_info.title {
+            note.title = Set(title);
+        }
+        if let Some(content) = note_info.content {
+            note.detail = Set(content);
+        }
+        if let Some(color) = note_info.color.filter(|c| !c.is_empty())  {
+            let color_id = self.get_color_id_by_color_detail(txn, &color).await?;
+            note.color = Set(color_id);
+        }
+        if let Some(status) = note_info.status.filter(|c| !c.is_empty())  {
+            let status_id = self.get_status_id_by_status_detail(txn, &status).await?;
+            note.status = Set(status_id);
+        }
+        note.updated_at = Set(Some(chrono::Local::now().to_utc()));
+        let result = note.update(txn).await?;
+        
+        Ok(result)
+    }
+
     async fn get_tags_for_note_id(
         &self,
         txn: &DatabaseTransaction,
@@ -176,6 +210,20 @@ pub trait AssociationTagHelperFullyImplemented {
         Ok(color)
     }
 
+    async fn get_color_id_by_color_detail(
+        &self,
+        txn: &DatabaseTransaction,
+        color_detail: &str
+    ) -> Result<i32, DbErr> {
+        let color = note_hex_color::Entity::find()
+            .filter(note_hex_color::Column::HexColor.eq(color_detail))
+            .one(txn)
+            .await?
+            .ok_or(DbErr::RecordNotFound("Failed to fetch color id".to_string()))?.id;
+            
+        Ok(color)
+    }
+
     async fn get_status_detail_by_status_id(
         &self,
         txn: &DatabaseTransaction,
@@ -188,6 +236,33 @@ pub trait AssociationTagHelperFullyImplemented {
             .ok_or(DbErr::RecordNotFound("Failed to fetch status detail".to_string()))?.status_detail;
         
         Ok(status)
+    }
+
+    async fn get_status_id_by_status_detail(
+        &self,
+        txn: &DatabaseTransaction,
+        status_detail: &str
+    ) -> Result<i32, DbErr> {
+        let status = note_status::Entity::find()
+            .filter(note_status::Column::StatusDetail.eq(status_detail))
+            .one(txn)
+            .await?
+            .ok_or(DbErr::RecordNotFound("Failed to fetch status id".to_string()))?.id;
+        
+        Ok(status)
+    }
+
+    async fn delete_all_note_tag_relation_by_note_id(
+        &self,
+        txn: &DatabaseTransaction,
+        note_id: i32,
+    ) 
+    -> Result<u64, DbErr>{
+        let result = note_tag::Entity::delete_many()
+            .filter(note_tag::Column::NoteId.eq(note_id))
+            .exec(txn)
+            .await?.rows_affected;
+        Ok(result)
     }
     
     
