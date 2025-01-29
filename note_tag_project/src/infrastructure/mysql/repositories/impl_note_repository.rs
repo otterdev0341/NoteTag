@@ -202,8 +202,43 @@ impl NoteRepository for ImplNoteRepository {
     }
 
     async fn get_all_note(&self, user_id: i32) -> Result<Vec<ResNoteEntryDto>, DbErr> {
-        // Implement the function logic here
-        Ok(vec![])
+        
+        // begin trasaction
+        let txn = self.db.begin().await?;
+        // check is user active
+        let is_user_active = self.is_user_status_is_active(&txn, user_id).await?;
+        if !is_user_active {
+            error!("User is not active");
+            txn.rollback().await?;
+            return Err(DbErr::Custom("User is not active, please contact admin".to_string()));
+        }
+        
+        // get all note by user_id
+        let all_notes = note::Entity::find()
+            .filter(note::Column::UserId.eq(user_id))
+            .all(&txn)
+            .await?;
+
+        // prepare the response dto
+        let mut return_notes = Vec::new();
+        for note in all_notes {
+            let tags_for_note = self.get_tags_for_note_id(&txn, note.id).await?;
+            let color = self.get_color_detail_by_color_id(&txn, note.color).await?;
+            let status = self.get_status_detail_by_status_id(&txn, note.status).await?;
+            let temp_note = ResNoteEntryDto {
+                id: note.id,
+                title: note.title.clone(),
+                content: note.detail.clone(),
+                colorCode: color,
+                status: status,
+                noteTags: tags_for_note,
+                createdAt: note.created_at.map(|dt| dt.to_string()).unwrap_or_default(),
+            };
+            return_notes.push(temp_note);
+        }
+        // commit transaction
+        txn.commit().await?;
+        Ok(return_notes)
     }
 
     async fn update_note_by_id(&self, user_id: i32, note_id: i32, note_info: ReqUpdateNoteDto) -> Result<(), DbErr> {

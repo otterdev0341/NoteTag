@@ -45,5 +45,6 @@ pub struct ReqUpdateNoteDto{
 #[derive(Debug, Serialize, Deserialize, ToSchema, Validate)]
 #[serde(crate = "rocket::serde")]
 pub struct ResNoteListDto{
+    pub total: i32,
     pub notes: Vec<ResNoteEntryDto>
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use rocket::serde::json::Json;
 use sea_orm::DbErr;
 
-use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, repositories::require_implementation::trait_note_repository::NoteRepository, };
+use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, repositories::require_implementation::trait_note_repository::NoteRepository, };
 
 pub struct NoteUseCase<T>
 where 
@@ -30,13 +30,19 @@ where
         }
     }
 
-    pub async fn get_all_notes(&self, user_id: i32) -> Result<Vec<ResNoteEntryDto>, String> {
-        todo!("Implement get_notes method in NoteUseCase");
-        let result = self.note_repository.get_all_note(user_id).await;
+    pub async fn get_all_notes(&self, user_id: i32) -> Result<ResNoteListDto, String> {
+        
+        let result: Result<Vec<ResNoteEntryDto>, DbErr> = self.note_repository.get_all_note(user_id).await;
         match result {
-            Ok(notes) => Ok(notes),
+            Ok(notes) => {
+                Ok(ResNoteListDto {
+                    total: notes.len() as i32,
+                    notes: notes
+                })
+            },
             Err(_) => Err("Error getting notes".to_string())
         }
+        
     }
 
     pub async fn get_note_by_id(&self, user_id: i32, note_id: i32) -> Result<ResNoteEntryDto, String> {

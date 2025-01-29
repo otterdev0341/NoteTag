@@ -2,7 +2,7 @@ use std::result::Result;
 use sea_orm::DbErr;
 use sea_orm_migration::async_trait;
 
-use crate::domain::dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto};
+use crate::domain::dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto};
 
 #[async_trait::async_trait]
 pub trait NoteRepository{
