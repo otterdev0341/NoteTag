@@ -1,11 +1,8 @@
+use sea_orm::DbErr;
 use sea_orm_migration::async_trait;
 
 #[async_trait::async_trait]
 pub trait NoteHexColorRepository {
-    async fn create(&self) -> Result<(), String>;
-    async fn read(&self) -> Result<(), String>;
-    async fn read_all(&self) -> Result<(), String>;
-    async fn update(&self) -> Result<(), String>;
-    async fn delete(&self) -> Result<(), String>;
-    
+    async fn set_note_color(&self, user_id:i32, note_id: i32, hex_color: &str) -> Result<(), DbErr>;
+        
 }

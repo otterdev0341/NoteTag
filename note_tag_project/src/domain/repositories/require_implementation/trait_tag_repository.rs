@@ -1,10 +1,10 @@
+use sea_orm::DbErr;
 use sea_orm_migration::async_trait;
 
 #[async_trait::async_trait]
 pub trait TagRepository {
-    async fn create(&self) -> Result<(), String>;
-    async fn read(&self) -> Result<(), String>;
-    async fn read_all(&self) -> Result<(), String>;
-    async fn update(&self) -> Result<(), String>;
-    async fn delete(&self) -> Result<(), String>;
+    async fn get_all_user_tags(&self, user_id: i32) -> Result<Vec<String>, DbErr>;
+    async fn create_user_tag(&self, user_id: i32, tag: String) -> Result<(), DbErr>;
+    async fn update_user_tag(&self, user_id: i32, tag: String) -> Result<(), DbErr>;
+    async fn delete_user_tag(&self, user_id: i32, tag: String) -> Result<(), DbErr>;
 }
