@@ -7,7 +7,7 @@ use sea_orm_migration::async_trait;
 use tracing::{error, info};
 use utoipa::openapi::tag;
 
-use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::{fully_implemented::{trait_association_helper_fully::AssociationTagHelperFullyImplemented, trait_entity_helper_fully::EntityHelperFullyImplemented}, require_implementation::trait_note_repository::NoteRepository}};
+use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::require_implementation::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_repository::{NoteRepository, NoteRepositoryFullyImplemented}, trait_note_status::NoteStatusFullyImplemented, trait_note_x_tag_repository::NoteTagRepositoryFullyImplemented, trait_tag_repository::TagRepositoryFullyImplemented, trait_user_repository::{UserRepository, UserRepositoryFullyImplemented}, trait_user_x_tag_repository::UserTagRepositoryFullyImplementd}};
 
 pub struct ImplNoteRepository {
     pub db: Arc<DatabaseConnection>
@@ -24,15 +24,46 @@ impl ImplNoteRepository {
 }
 
 #[async_trait::async_trait]
-impl EntityHelperFullyImplemented for ImplNoteRepository {
-    // use complete funtion that already implement in Trait EntityHelper,
+impl TagRepositoryFullyImplemented for ImplNoteRepository {
+    // method name in trait TagRepositoryFullyImplemented
+    
+}
+#[async_trait::async_trait]
+impl UserTagRepositoryFullyImplementd for ImplNoteRepository {
+    // use complete funtion that already implement in Trait UserTagRepository,
     // because we need to use this function in this repository
     // and use without implement it in this repository
 }
 
 #[async_trait::async_trait]
-impl AssociationTagHelperFullyImplemented for ImplNoteRepository {
-    // use complete funtion that already implement in Trait AssociationTagHelper,
+impl NoteTagRepositoryFullyImplemented for ImplNoteRepository{
+    // use complete funtion that already implement in Trait NoteTagRepository,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
+#[async_trait::async_trait]
+impl NoteHexColorRepositoryFullyImplemented for ImplNoteRepository{
+    // use complete funtion that already implement in Trait HoteHexColorRepository,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
+#[async_trait::async_trait]
+impl NoteStatusFullyImplemented for ImplNoteRepository{
+    // use complete funtion that already implement in Trait NoteStatus,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
+impl NoteRepositoryFullyImplemented for ImplNoteRepository {
+    // use complete funtion that already implement in Trait NoteRepository,
+    // because we need to use this function in this repository
+    // and use without implement it in this repository
+}
+
+impl UserRepositoryFullyImplemented for ImplNoteRepository {
+    // use complete funtion that already implement in Trait UserRepository,
     // because we need to use this function in this repository
     // and use without implement it in this repository
 }
