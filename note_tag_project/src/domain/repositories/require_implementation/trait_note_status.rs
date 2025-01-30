@@ -4,13 +4,13 @@ use sea_orm_migration::async_trait;
 use crate::domain::entities::note_status;
 
 #[async_trait::async_trait]
-pub trait NoteStatus {
-    async fn set_note_status(&self, note_id: i32, status: &str) -> Result<(), DbErr>;
+pub trait NoteStatusRepository {
+    async fn toggle_note_status(&self, user_id: i32, note_id: i32) -> Result<(), DbErr>;
     
 }
 
 #[async_trait::async_trait]
-pub trait NoteStatusFullyImplemented {
+pub trait NoteStatusRepositoryFullyImplemented {
     async fn get_status_detail_by_status_id(
         &self,
         txn: &DatabaseTransaction,

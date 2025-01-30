@@ -5,7 +5,7 @@ use sqlx::types::chrono;
 
 use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::note};
 
-use super::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_status::NoteStatusFullyImplemented};
+use super::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_status::NoteStatusRepositoryFullyImplemented};
 
 #[async_trait::async_trait]
 pub trait NoteRepository{
@@ -17,7 +17,7 @@ pub trait NoteRepository{
 }
 
 #[async_trait::async_trait]
-pub trait NoteRepositoryFullyImplemented: NoteHexColorRepositoryFullyImplemented + NoteStatusFullyImplemented {
+pub trait NoteRepositoryFullyImplemented: NoteHexColorRepositoryFullyImplemented + NoteStatusRepositoryFullyImplemented {
     async fn update_note_with_option_field(
         &self,
         txn: &DatabaseTransaction,

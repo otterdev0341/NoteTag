@@ -9,3 +9,4 @@ pub mod trait_tag_repository;
 pub mod trait_user_helper_repository;
 pub mod trait_user_repository;
 pub mod trait_user_x_tag_repository;
+pub mod trait_user_note_query_repository;

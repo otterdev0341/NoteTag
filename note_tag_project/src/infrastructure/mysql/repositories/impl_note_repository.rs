@@ -7,7 +7,7 @@ use sea_orm_migration::async_trait;
 use tracing::{error, info};
 use utoipa::openapi::tag;
 
-use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::require_implementation::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_repository::{NoteRepository, NoteRepositoryFullyImplemented}, trait_note_status::NoteStatusFullyImplemented, trait_note_x_tag_repository::NoteTagRepositoryFullyImplemented, trait_tag_repository::TagRepositoryFullyImplemented, trait_user_repository::{UserRepository, UserRepositoryFullyImplemented}, trait_user_x_tag_repository::UserTagRepositoryFullyImplementd}};
+use crate::domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto}, entities::{note, note_hex_color, note_status}, repositories::require_implementation::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_repository::{NoteRepository, NoteRepositoryFullyImplemented}, trait_note_status::NoteStatusRepositoryFullyImplemented, trait_note_x_tag_repository::NoteTagRepositoryFullyImplemented, trait_tag_repository::TagRepositoryFullyImplemented, trait_user_repository::{UserRepository, UserRepositoryFullyImplemented}, trait_user_x_tag_repository::UserTagRepositoryFullyImplementd}};
 
 pub struct ImplNoteRepository {
     pub db: Arc<DatabaseConnection>
@@ -50,18 +50,18 @@ impl NoteHexColorRepositoryFullyImplemented for ImplNoteRepository{
 }
 
 #[async_trait::async_trait]
-impl NoteStatusFullyImplemented for ImplNoteRepository{
+impl NoteStatusRepositoryFullyImplemented for ImplNoteRepository{
     // use complete funtion that already implement in Trait NoteStatus,
     // because we need to use this function in this repository
     // and use without implement it in this repository
 }
-
+#[async_trait::async_trait]
 impl NoteRepositoryFullyImplemented for ImplNoteRepository {
     // use complete funtion that already implement in Trait NoteRepository,
     // because we need to use this function in this repository
     // and use without implement it in this repository
 }
-
+#[async_trait::async_trait]
 impl UserRepositoryFullyImplemented for ImplNoteRepository {
     // use complete funtion that already implement in Trait UserRepository,
     // because we need to use this function in this repository

@@ -18,6 +18,7 @@ impl ImplUserTagRepository {
     }
 }
 
+#[async_trait::async_trait]
 impl UserTagRepositoryFullyImplementd for ImplUserTagRepository {
     
 }

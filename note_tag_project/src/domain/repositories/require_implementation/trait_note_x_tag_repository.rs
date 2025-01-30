@@ -2,13 +2,12 @@ use sea_orm::{ColumnTrait, DatabaseTransaction, DbErr, EntityTrait, QueryFilter,
 use sea_orm_migration::async_trait;
 use tracing::info;
 
-use crate::domain::entities::{note_tag, tag};
+use crate::domain::{dto::note_dto::ResNoteEntryDto, entities::{note_tag, tag}};
 
 #[async_trait::async_trait]
 pub trait NoteTagRepository {
-    async fn add_tag_to_note(&self, note_id: i32, tag: &str) -> Result<(), DbErr>;
-    async fn remove_tag_from_note(&self, note_id: i32, tag: &str) -> Result<(), DbErr>;
-    async fn get_note_by_tags(&self, user_id: i32, tags: Vec<String>) -> Result<Vec<i32>, DbErr>;
+    async fn get_notes_by_tags(&self, user_id: i32, tags: Vec<String>) -> Result<Vec<ResNoteEntryDto>, DbErr>;
+    async fn get_notes_by_keyword(&self, user_id: i32, keyword: String) -> Result<Vec<ResNoteEntryDto>, DbErr>;
 }
 
 #[async_trait::async_trait]
