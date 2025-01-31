@@ -1,6 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
-use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, JoinType, QueryFilter, QuerySelect, TransactionTrait};
+use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, JoinType, QueryFilter, QuerySelect, RelationTrait, TransactionTrait};
 use sea_orm_migration::async_trait;
 
 use crate::domain::{dto::{note_dto::ResNoteEntryDto, query::QueryNoteDto}, entities::{note, note_tag, prelude::NoteStatus, tag}, repositories::require_implementation::{trait_note_hex_color_repository::NoteHexColorRepositoryFullyImplemented, trait_note_status::NoteStatusRepositoryFullyImplemented, trait_note_x_tag_repository::NoteTagRepositoryFullyImplemented, trait_user_note_query_repository::UserNoteQueryRepository, trait_user_repository::UserRepositoryFullyImplemented}};
@@ -41,7 +41,8 @@ impl UserNoteQueryRepository for ImplUserNoteQueryRepository{
         }
         
         // start query
-        let mut query = note::Entity::find();
+        let mut query = note::Entity::find()
+        .filter(note::Column::UserId.eq(user_id));
         
         // apply filter from query_info on title
         if let Some(title) = query_info.title.as_deref()
@@ -68,10 +69,17 @@ impl UserNoteQueryRepository for ImplUserNoteQueryRepository{
                 .into_iter()
                 .collect();
             if !valid_tags.is_empty(){
-                query = query
-                    .join(JoinType::LeftJoin, note::Entity::has_many(note_tag::Entity).into()) 
-                    .join(JoinType::LeftJoin, note_tag::Entity::belongs_to(tag::Entity).into()) 
-                    .filter(tag::Column::TagName.is_in(valid_tags));
+                query = note::Entity::find()
+                .join(JoinType::InnerJoin, note::Relation::NoteTag.def()) 
+                .join(JoinType::InnerJoin, note_tag::Relation::Tag.def()) ;
+
+                // Apply multiple Or Filters if needed
+                let mut tag_filter = tag::Column::TagName.eq(valid_tags[0].clone());
+                for tag in valid_tags.iter().skip(1){
+                    tag_filter = tag_filter.or(tag::Column::TagName.eq(tag.clone()));
+                }
+                query = query.filter(tag_filter);
+                
             }
         }
         // query all note
