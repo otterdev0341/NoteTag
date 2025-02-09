@@ -3,13 +3,14 @@ use std::sync::Arc;
 use rocket::{get, http::Status, post, routes, serde::json::Json, Route, State};
 use validator::Validate;
 use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
-
+use crate::infrastructure::faring::cors::{CORS, options};
 
 pub fn auth_routes() -> Vec<Route> {
     routes![
         sign_in,
         sign_up,
-        me
+        me,
+        options,
     ]
 }
 
