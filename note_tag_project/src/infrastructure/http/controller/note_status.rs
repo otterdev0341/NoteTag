@@ -1,14 +1,15 @@
 use std::sync::Arc;
 
-use rocket::{http::Status, post, put, routes, Route, State};
+use rocket::{http::Status, put, routes, Route, State};
 
-use crate::{application::usecase::note_status::NoteStatusUseCase, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_x_status_repository::ImplNoteStatusRepository}};
+use crate::{application::usecase::note_status::NoteStatusUseCase, infrastructure::{faring::{authentication::AuthenticatedUser, cors::options}, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_x_status_repository::ImplNoteStatusRepository}};
 
 
 
 pub fn note_status_routes() -> Vec<Route> {
     routes![
-        toggle_note_status
+        toggle_note_status,
+        options
     ]
 }
 

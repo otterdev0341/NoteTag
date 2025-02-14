@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use rocket::{delete, get, http::Status, post, put, routes, serde::json::Json, Route, State};
 use sea_orm::DbErr;
-
-use crate::{application::usecase::note_usecase::NoteUseCase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::user}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_repository::ImplNoteRepository}};
+use crate::infrastructure::faring::cors::options;
+use crate::{application::usecase::note_usecase::NoteUseCase, domain::{dto::note_dto::{ReqCreateNoteDto, ReqUpdateNoteDto, ResNoteEntryDto, ResNoteListDto}, entities::user}, infrastructure::{faring::{authentication::AuthenticatedUser}, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_note_repository::ImplNoteRepository}};
 
 
 pub fn note_routes() -> Vec<Route> {
@@ -12,7 +12,8 @@ pub fn note_routes() -> Vec<Route> {
         get_note_by_id,
         get_all_note,
         update_note,
-        delete_note
+        delete_note,
+        options
     ]
 }
 

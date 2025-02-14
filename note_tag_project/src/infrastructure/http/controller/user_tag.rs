@@ -5,7 +5,7 @@ use sea_orm::Update;
 use utoipa::openapi::tag;
 use validator::Validate;
 
-use crate::{application::usecase::user_tag_usecase::UserTagUseCase, domain::{dto::user_tag_dto::{UpdateUserTagDto, UserTagDto, UserTagListDto}, entities::user_tag}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_x_tag_repository::ImplUserTagRepository}};
+use crate::{application::usecase::user_tag_usecase::UserTagUseCase, domain::{dto::user_tag_dto::{UpdateUserTagDto, UserTagDto, UserTagListDto}, entities::user_tag}, infrastructure::{faring::{authentication::AuthenticatedUser, cors::options}, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_x_tag_repository::ImplUserTagRepository}};
 
 
 pub fn user_tag_routes() -> Vec<Route> {
@@ -13,7 +13,8 @@ pub fn user_tag_routes() -> Vec<Route> {
         add_user_tag,
         get_user_tag,
         update_user_tag,
-        delete_tag_from_user
+        delete_tag_from_user,
+        options
     ]
 }
 

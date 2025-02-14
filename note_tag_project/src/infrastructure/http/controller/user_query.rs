@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use rocket::{http::Status, post, routes, serde::json::Json, Route, State};
 
-use crate::{application::usecase::user_query_usecase::UserQueryUsecase, domain::{dto::{note_dto::ResNoteListDto, query::QueryNoteDto}, repositories::require_implementation::trait_user_note_query_repository::UserNoteQueryRepository}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_note_query_repository::ImplUserNoteQueryRepository}};
+use crate::{application::usecase::user_query_usecase::UserQueryUsecase, domain::{dto::{note_dto::ResNoteListDto, query::QueryNoteDto}, repositories::require_implementation::trait_user_note_query_repository::UserNoteQueryRepository}, infrastructure::{faring::{authentication::AuthenticatedUser, cors::options}, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_note_query_repository::ImplUserNoteQueryRepository}};
 
 pub fn user_query_routes() -> Vec<Route> {
     routes![
-        user_query
+        user_query,
+        options
     ]
 }
 
