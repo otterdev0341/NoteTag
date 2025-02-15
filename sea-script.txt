@@ -33,7 +33,8 @@ INSERT INTO note_hex_color (hex_color) VALUES
 ('#9FE2BF'),
 ('#40E0D0'),
 ('#6495ED'),
-('#CCCCFF');
+('#CCCCFF'),
+('#DADADA');
 
 insert into note_status (status_detail) values 
 ('active'),

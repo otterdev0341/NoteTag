@@ -98,7 +98,7 @@ impl NoteRepository for ImplNoteRepository {
             .await? {
             Some(color) => Some(color.id),
             None => {
-                Some(1)
+                Some(9)
             }
             };
         // get {{Note status}} id by ReqCreateNoteDto from string to i32 to persist to database
