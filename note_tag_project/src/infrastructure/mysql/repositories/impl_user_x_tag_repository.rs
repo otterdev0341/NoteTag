@@ -136,6 +136,7 @@ impl UserTagRepository for ImplUserTagRepository {
                 return Err(DbErr::Custom(format!("User with id {} and tag with id {} not found in association table", the_user_id, the_old_tag_id)));
             }
         };
+        
     
         // Step 4: Find or create the new tag
         let the_new_tag_id = match tag::Entity::find()
@@ -163,7 +164,28 @@ impl UserTagRepository for ImplUserTagRepository {
         new_record.insert(&txn).await?;
 
         // Step 6 : select note with association old tag and update asso to new tag
-
+        let relation_note_tag = entities::note_tag::Entity::find()
+            .filter(entities::note_tag::Column::TagId.eq(the_old_tag_id))
+            .all(&txn)
+            .await?;
+        // start loop
+        for note_tag in relation_note_tag {
+            // keep id of note that have relation with old tag
+            let note_id = note_tag.note_id.clone();
+            // drop it because both are primary key can't update
+            let delete_result = note_tag::Entity::delete_many()
+                .filter(entities::note_tag::Column::NoteId.eq(note_id))
+                .filter(entities::note_tag::Column::TagId.eq(the_old_tag_id))
+                .exec(&txn)
+                .await;
+            // create new relation with new tag that insert it
+            let new_note_tag = entities::note_tag::ActiveModel {
+                note_id: Set(note_id),
+                tag_id: Set(the_new_tag_id),
+                ..Default::default()
+            };
+            new_note_tag.insert(&txn).await?;
+        }
         // Commit the transaction
         let commit_result = txn.commit().await;
         match commit_result {
