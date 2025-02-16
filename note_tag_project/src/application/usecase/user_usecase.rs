@@ -4,8 +4,10 @@ use std::{sync::Arc, time::SystemTime};
 use bcrypt::verify;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use rocket::http::Status;
+use sea_orm::Iden;
+use sea_orm_migration::seaql_migrations::Entity;
 
-use crate::{ configuration::jwt_config::JwtSecret, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, repositories::require_implementation::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::http::response_type::response_type::ErrorResponse};
+use crate::{ configuration::jwt_config::JwtSecret, domain::{dto::auth_dto::{Claims, ReqSignInDto, ReqSignUpDto, ResSignInDto}, entities::user, repositories::require_implementation::{trait_user_helper_repository::UserHelperRepository, trait_user_repository::UserRepository}}, infrastructure::http::response_type::response_type::ErrorResponse};
 
 pub struct UserUseCase<T>
 where 
@@ -103,6 +105,17 @@ where
 
     pub fn update_account(&self) {
         todo!()
+    }
+
+    pub async fn get_user_by_id(&self, user_id: i32) -> Option<String> {
+        
+        let user= self.user_repository.get_user_by_id(user_id).await.ok()?;
+        match user {
+            Some(u) => {
+                Some(u.username)
+            },
+            None => None
+        }
     }
 
 }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use rocket::{get, http::Status, post, routes, serde::json::Json, Route, State};
 use validator::Validate;
-use crate::{application::usecase::user_usecase::{UserOperation, UserUseCase}, domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
+use crate::{application::usecase::user_usecase::{self, UserOperation, UserUseCase}, domain::dto::auth_dto::{ReqSignInDto, ReqSignUpDto, ResSignInDto}, infrastructure::{faring::authentication::AuthenticatedUser, http::response_type::response_type::{ErrorResponse, Response, SuccessResponse}, mysql::repositories::impl_user_repository::ImplUserRepository}};
 use crate::infrastructure::faring::cors::{CORS, options};
 
 pub fn auth_routes() -> Vec<Route> {
@@ -94,11 +94,24 @@ pub async fn sign_up(
 
 // Route 3
 #[get("/me")]
-pub async fn me(user: AuthenticatedUser) -> Response<String> {
-    Ok(SuccessResponse((
-        Status::Ok,
-        "My user ID is: ".to_string() + user.id.to_string().as_str(),
-    )))
+pub async fn me(
+    user: AuthenticatedUser,
+    user_use_case: &State<Arc<UserUseCase<ImplUserRepository>>>
+) -> Response<String> {
+    
+    // get username
+    let result = user_use_case.get_user_by_id(user.id).await;
+    match result {
+        Some(user) => {
+            Ok(SuccessResponse((Status::Ok, user)))
+        },
+        None => {
+            Err(ErrorResponse((Status::BadRequest, "Error getting user".to_string())))
+        }
+    }
+
+    
+    
 }
 
 

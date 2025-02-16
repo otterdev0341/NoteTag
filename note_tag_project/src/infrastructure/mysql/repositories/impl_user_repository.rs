@@ -58,8 +58,25 @@ impl UserRepository for ImplUserRepository {
         }
     }
 
-    async fn get_user_by_id(&self, user_id: i32) -> Result<Option<user::Entity>, DbErr> {
-        todo!()
+    async fn get_user_by_id(&self, user_id: i32) -> Result<Option<user::Model>, DbErr> {
+        let result = user::Entity::find()
+            .filter(user::Column::Id.eq(user_id))
+            .one(&*self.db)
+            .await;
+        
+        match result {
+            Ok(user) => {
+                match user {
+                    Some(u) => {
+                        Ok(Some(u))
+                    },
+                    None => Ok(None)
+                }
+            },
+            Err(err) => {
+                Err(err)
+            }
+        }
     }
 
     async fn get_all_user(&self) -> Result<Vec<user::Entity>, DbErr> {
