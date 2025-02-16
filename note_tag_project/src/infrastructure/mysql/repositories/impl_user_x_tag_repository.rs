@@ -4,7 +4,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTr
 use sea_orm_migration::async_trait;
 use tracing::{error, info};
 
-use crate::domain::{entities::{self, tag, user, user_tag}, repositories::require_implementation::trait_user_x_tag_repository::{UserTagRepository, UserTagRepositoryFullyImplementd}};
+use crate::domain::{entities::{self, note, note_tag, tag, user, user_tag}, repositories::require_implementation::trait_user_x_tag_repository::{UserTagRepository, UserTagRepositoryFullyImplementd}};
 
 pub struct ImplUserTagRepository {
     pub db : Arc<DatabaseConnection>
@@ -161,6 +161,9 @@ impl UserTagRepository for ImplUserTagRepository {
             ..Default::default()
         };
         new_record.insert(&txn).await?;
+
+        // Step 6 : select note with association old tag and update asso to new tag
+
         // Commit the transaction
         let commit_result = txn.commit().await;
         match commit_result {
@@ -220,27 +223,15 @@ impl UserTagRepository for ImplUserTagRepository {
                     return Err(DbErr::Custom(format!("User with id {} and tag with id {} not found", user_id, tag.id)));
                 }
             };
-        // checl if tag have no associate with note_tag
+        // delete all association between note and tag
+        
+        // check if tag have associate with note_tag then remove all
         let note_tag = entities::note_tag::Entity::find()
             .filter(entities::note_tag::Column::TagId.eq(tag.id))
-            .one(&txn)
-            .await;
-        match note_tag {
-            Ok(model) => match model {
-                Some(_data) => {
-                    error!("Tag with id {} is associated with note tag", tag.id);
-                    txn.rollback().await?;  // Rollback transaction
-                    return Err(DbErr::Custom(format!("Tag with id {} is associated with note tag", tag.id)));
-                },
-                None => {
-                    info!("Tag with id {} is not associated with note tag", tag.id);
-                }
-            }
-            Err(_) => {
-                error!("Error checking if tag with id {} is associated with note tag", tag.id);
-                txn.rollback().await?;  // Rollback transaction
-                return Err(DbErr::Custom(format!("Error checking if tag with id {} is associated with note tag", tag.id)));
-            }
+            .all(&txn)
+            .await?;
+        for note_tag in note_tag {
+            let _delete_result = note_tag.delete(&txn).await;
         }
 
         // delete user_tag
